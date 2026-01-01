@@ -2,6 +2,7 @@ from pydantic import BaseModel, EmailStr
 from typing import Optional
 
 class Create_User(BaseModel):
+    pass
     name: str
     nyu_email : EmailStr
     nyu_id : str
@@ -12,6 +13,7 @@ class Create_User(BaseModel):
     work_willingness: int
 
 class User_Response(BaseModel):
+    pass
     name: str
     nyu_email : EmailStr
     nyu_id : str
@@ -19,3 +21,14 @@ class User_Response(BaseModel):
     minor: Optional[str] = None
     academic_year: int
     work_willingness: int
+
+class Login_Request(BaseModel):
+    pass
+    nyu_email : EmailStr
+    password : str
+
+class Token_Response(BaseModel):
+    pass
+    access_token : str
+    token_type: str = "bearer"
+    user: User_Response
