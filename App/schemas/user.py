@@ -9,17 +9,18 @@ class Create_User(BaseModel):
     password: str
     major: str
     minor: Optional[str] = None
-    academic_year: int
+    academic_standing: int
     work_willingness: int
 
 class User_Response(BaseModel):
     pass
+    id: str
     name: str
     nyu_email : EmailStr
     nyu_id : str
     major: str
     minor: Optional[str] = None
-    academic_year: int
+    academic_standing: int
     work_willingness: int
 
 class Login_Request(BaseModel):
