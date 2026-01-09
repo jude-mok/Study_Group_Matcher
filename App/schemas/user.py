@@ -1,17 +1,6 @@
 from pydantic import BaseModel, EmailStr
 from typing import Optional
 
-class Create_User(BaseModel):
-    pass
-    name: str
-    nyu_email : EmailStr
-    nyu_id : str
-    password: str
-    major: str
-    minor: Optional[str] = None
-    academic_standing: int
-    work_willingness: int
-
 class User_Response(BaseModel):
     pass
     id: str
@@ -23,13 +12,11 @@ class User_Response(BaseModel):
     academic_standing: int
     work_willingness: int
 
-class Login_Request(BaseModel):
-    pass
-    nyu_email : EmailStr
-    password : str
 
-class Token_Response(BaseModel):
-    pass
-    access_token : str
-    token_type: str = "bearer"
-    user: User_Response
+class Update_User(BaseModel):
+    name: Optional[str] = None
+    password: Optional[str] = None
+    major: Optional[str] = None
+    minor: Optional[str] = None
+    academic_standing: Optional[int]
+    work_willingness: Optional[int]
