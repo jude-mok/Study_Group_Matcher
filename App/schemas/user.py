@@ -1,22 +1,67 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field, field_validator
 from typing import Optional
 
-class User_Response(BaseModel):
+
+def normalize_string(value: str) -> str:
+    pass
+    if value is None:
+        return None
+    return value.strip().lower()
+
+
+class UserBase(BaseModel):
+    pass
+    name: str
+    nyu_email: EmailStr
+    nyu_id: str
+    major: str
+    minor: Optional[str] = None
+    academic_standing: int = Field(..., ge=1, le=4, description="Year in school (1-4)")
+    work_willingness: int = Field(..., ge=1, le=10, description="Work willingness score (1-10)")
+
+
+class UserResponse(BaseModel):
     pass
     id: str
     name: str
-    nyu_email : EmailStr
-    nyu_id : str
+    nyu_email: str
+    nyu_id: str
     major: str
     minor: Optional[str] = None
     academic_standing: int
     work_willingness: int
 
+    class Config:
+        from_attributes = True
+        json_schema_extra = {
+            "example": {
+                "id": "uuid-string",
+                "name": "john doe",
+                "nyu_email": "jd1234@nyu.edu",
+                "nyu_id": "N12345678",
+                "major": "computer science",
+                "minor": "mathematics",
+                "academic_standing": 3,
+                "work_willingness": 8
+            }
+        }
 
-class Update_User(BaseModel):
+
+class UserUpdate(BaseModel):
+    pass
     name: Optional[str] = None
-    password: Optional[str] = None
     major: Optional[str] = None
     minor: Optional[str] = None
-    academic_standing: Optional[int]
-    work_willingness: Optional[int]
+    academic_standing: Optional[int] = Field(None, ge=1, le=4)
+    work_willingness: Optional[int] = Field(None, ge=1, le=10)
+    password: Optional[str] = Field(None, min_length=8)
+
+    @field_validator('name', 'major', 'minor', mode='before')
+    @classmethod
+    def normalize_fields(cls, v):
+        return normalize_string(v) if isinstance(v, str) else v
+
+
+# Backward compatibility aliases
+User_Response = UserResponse
+Update_User = UserUpdate

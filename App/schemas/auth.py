@@ -1,25 +1,89 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field, field_validator
 from typing import Optional
-from schemas.user import User_Response
 
-class Create_User(BaseModel):
+from schemas.user import UserResponse, normalize_string
+
+
+class UserCreate(BaseModel):
     pass
-    name: str
-    nyu_email : EmailStr
-    nyu_id : str
-    password: str
-    major: str
+    name: str = Field(..., min_length=1)
+    nyu_email: EmailStr
+    nyu_id: str = Field(..., min_length=1)
+    password: str = Field(..., min_length=8)
+    major: str = Field(..., min_length=1)
     minor: Optional[str] = None
-    academic_standing: int
-    work_willingness: int
-    
-class Login_Request(BaseModel):
-    pass
-    nyu_email : EmailStr
-    password : str
+    academic_standing: int = Field(..., ge=1, le=4, description="Year in school (1-4)")
+    work_willingness: int = Field(..., ge=1, le=10, description="Work willingness score (1-10)")
 
-class Token_Response(BaseModel):
+    @field_validator('nyu_email', 'name', 'major', 'minor', 'nyu_id', mode='before')
+    @classmethod
+    def normalize_fields(cls, v):
+        return normalize_string(v) if isinstance(v, str) else v
+
+    @field_validator('nyu_email')
+    @classmethod
+    def validate_nyu_email(cls, v):
+        if not v.endswith('@nyu.edu'):
+            raise ValueError('Must be a valid NYU email address')
+        return v
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "name": "John Doe",
+                "nyu_email": "jd1234@nyu.edu",
+                "nyu_id": "N12345678",
+                "password": "securepassword123",
+                "major": "Computer Science",
+                "minor": "Mathematics",
+                "academic_standing": 2,
+                "work_willingness": 7
+            }
+        }
+
+
+class LoginRequest(BaseModel):
     pass
-    access_token : str
+    nyu_email: EmailStr
+    password: str
+
+    @field_validator('nyu_email', mode='before')
+    @classmethod
+    def normalize_email(cls, v):
+        return normalize_string(v) if isinstance(v, str) else v
+
+
+class TokenResponse(BaseModel):
+    pass
+    access_token: str
     token_type: str = "bearer"
-    user: User_Response
+    user: UserResponse
+
+
+class RefreshTokenRequest(BaseModel):
+    pass
+    refresh_token: str
+
+
+class PasswordResetRequest(BaseModel):
+    pass
+    email: EmailStr
+
+    @field_validator('email', mode='before')
+    @classmethod
+    def normalize_email(cls, v):
+        return normalize_string(v) if isinstance(v, str) else v
+
+
+class PasswordResetConfirm(BaseModel):
+    pass
+    new_password: str = Field(..., min_length=8)
+
+
+# Backward compatibility aliases
+Create_User = UserCreate
+Login_Request = LoginRequest
+Token_Response = TokenResponse
+Refresh_Token_Request = RefreshTokenRequest
+Password_Reset_Request = PasswordResetRequest
+Password_Reset_Confirm = PasswordResetConfirm
