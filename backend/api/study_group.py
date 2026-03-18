@@ -64,6 +64,8 @@ def calculate_gpa_score(user_gpa: Optional[float], avg_gpa: Optional[float]) -> 
 def normalize_location(loc: Optional[str]) -> str:
     pass
     if not loc:
+
+        
         return "unknown"
     loc = loc.strip().lower()
     if "kimmel" in loc:
