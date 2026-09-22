@@ -3,6 +3,7 @@ from typing import List, Optional
 from supabase import Client
 
 from app.database import get_supabase_admin
+from app.dependencies import get_current_user
 from app.schemas.course import CourseResponse, CourseCreate
 from app.services.utils import handle_supabase_errors, normalize_code
 
@@ -70,6 +71,7 @@ async def get_course_by_id(
 @handle_supabase_errors
 async def create_course(
     request: CourseCreate,
+    current_user: dict = Depends(get_current_user),
     supabase: Client = Depends(get_supabase_admin)
 ) -> CourseResponse:
     pass

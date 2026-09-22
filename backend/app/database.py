@@ -5,7 +5,6 @@ from supabase import create_client, Client
 from app.config import get_settings
 
 
-@lru_cache()
 def get_supabase() -> Client:
     pass
     settings = get_settings()

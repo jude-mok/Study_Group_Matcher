@@ -86,11 +86,16 @@ async def websocket_chat(
         return
 
     # 3. 연결 등록
-    await manager.connect(room_id, websocket)
+    await manager.connect(room_id, websocket, user_id)
 
     try:
         while True:
             data = await websocket.receive_json()
+            if not check_room_membership(supabase_admin, room_id, user_id):
+                await websocket.close(code=4003)
+                break
+            if not isinstance(data, dict) or not isinstance(data.get("content", ""), str):
+                continue
             content: str = data.get("content", "").strip()
             if not content:
                 continue
@@ -108,4 +113,7 @@ async def websocket_chat(
     except WebSocketDisconnect:
         manager.disconnect(room_id, websocket)
     except Exception:
+        manager.disconnect(room_id, websocket)
+
+    finally:
         manager.disconnect(room_id, websocket)

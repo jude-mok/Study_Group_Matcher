@@ -54,7 +54,7 @@ async def update_current_user_profile(
     # Handle password update separately
     if "password" in update_data:
         password = update_data.pop("password")
-        update_user_password(supabase, password)
+        update_user_password(supabase, current_user["id"], password)
 
     # Update remaining fields in database
     if update_data:
@@ -87,6 +87,9 @@ async def delete_current_user(
     supabase.table("user_study_groups").delete().eq("user_id", user_id).execute()
     supabase.table("schedule").delete().eq("created_by", user_id).execute()
     supabase.table("user_courses").delete().eq("user_id", user_id).execute()
+
+    from app.routers.chat import manager
+    await manager.revoke_user(user_id)
 
     # Delete from users table
     delete_user_from_db(supabase, user_id)

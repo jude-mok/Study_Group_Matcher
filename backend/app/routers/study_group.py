@@ -3,6 +3,7 @@ from typing import List, Optional
 from supabase import Client
 
 from app.database import get_supabase_admin
+from app.routers.chat import manager
 from app.dependencies import get_current_user
 from app.schemas.join_request import JoinRequestResponse
 from app.schemas.study_group import GroupMemberResponse, StudyGroupCreate, StudyGroupResponse, StudyGroupRecommendation
@@ -415,6 +416,7 @@ async def leave_study_group(
         supabase_admin.table("room_members").delete().eq(
             "room_id", room_result.data[0]["id"]
         ).eq("user_id", current_user["id"]).execute()
+        await manager.revoke_user(current_user["id"], room_result.data[0]["id"])
 
 
 @router.get("/me", response_model=List[StudyGroupResponse])
@@ -637,6 +639,18 @@ async def accept_join_request(
 
     applicant_id = req_result.data[0]["user_id"]
 
+    existing = supabase.table("user_study_groups").select("user_id").eq(
+        "study_group_id", group_id
+    ).eq("user_id", applicant_id).execute()
+    if existing.data:
+        raise HTTPException(status_code=409, detail="Already a member of this study group")
+    group = get_group_or_404(supabase, group_id)
+    members = supabase.table("user_study_groups").select("user_id", count="exact").eq(
+        "study_group_id", group_id
+    ).execute()
+    if (members.count or 0) >= group["max_members"]:
+        raise HTTPException(status_code=400, detail="Study group is full")
+
     supabase.table("user_study_groups").insert({
         "user_id": applicant_id,
         "study_group_id": group_id,
@@ -753,5 +767,8 @@ async def kick_member(
         supabase.table("room_members").delete().eq(
             "room_id", room_id
         ).eq("user_id", user_id).execute()
+
+    if room_result.data:
+        await manager.revoke_user(user_id, room_result.data[0]["id"])
 
     return {"message": "Member has been removed from the group and chat room"}

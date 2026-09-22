@@ -53,3 +53,17 @@ async def get_current_user(
         )
 
     return result.data[0]
+
+
+async def get_auth_identity(
+    credentials: HTTPAuthorizationCredentials = Depends(security),
+    supabase: Client = Depends(get_supabase),
+):
+    pass
+    try:
+        result = supabase.auth.get_user(credentials.credentials)
+        if result and result.user:
+            return result.user
+    except Exception:
+        pass
+    raise HTTPException(status_code=401, detail="Could not validate credentials")

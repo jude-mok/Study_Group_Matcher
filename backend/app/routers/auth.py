@@ -2,7 +2,8 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from supabase import Client
 
 from app.database import get_supabase, get_supabase_admin
-from app.dependencies import get_current_user
+from app.dependencies import get_current_user, get_auth_identity, security
+from fastapi.security import HTTPAuthorizationCredentials
 from app.schemas.user import UserResponse
 from app.schemas.auth import (
     UserCreate,
@@ -121,10 +122,11 @@ async def login(
 @handle_supabase_errors
 async def logout(
     _current_user: dict = Depends(get_current_user),  # Auth required
-    supabase: Client = Depends(get_supabase)
+    credentials: HTTPAuthorizationCredentials = Depends(security),
+    supabase: Client = Depends(get_supabase_admin),
 ):
     pass
-    supabase.auth.sign_out()
+    supabase.auth.admin.sign_out(credentials.credentials)
     return {"message": "Successfully logged out"}
 
 
@@ -171,22 +173,21 @@ async def request_password_reset(
 @handle_supabase_errors
 async def confirm_password_reset(
     reset_confirm: PasswordResetConfirm,
-    supabase: Client = Depends(get_supabase)
+    identity = Depends(get_auth_identity),
+    supabase: Client = Depends(get_supabase_admin)
 ):
     pass
-    supabase.auth.update_user({"password": reset_confirm.new_password})
+    supabase.auth.admin.update_user_by_id(identity.id, {"password": reset_confirm.new_password})
     return {"message": "Password updated successfully"}
 
 
 @router.get("/verify-email-status", status_code=status.HTTP_200_OK)
 @handle_supabase_errors
 async def check_email_verification(
-    _current_user: dict = Depends(get_current_user),  # Auth required
-    supabase: Client = Depends(get_supabase)
+    identity = Depends(get_auth_identity),
 ):
     pass
-    user = supabase.auth.get_user()
     return {
-        "email_verified": user.user.email_confirmed_at is not None,
-        "email": user.user.email
+        "email_verified": identity.email_confirmed_at is not None,
+        "email": identity.email
     }

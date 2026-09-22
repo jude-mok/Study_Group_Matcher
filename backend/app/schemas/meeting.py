@@ -1,12 +1,12 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, AwareDatetime
 from datetime import datetime
 from typing import Optional, List
 
 
 class MeetingProposalCreate(BaseModel):
     room_id: str
-    start_time: datetime
-    end_time: datetime
+    start_time: AwareDatetime
+    end_time: AwareDatetime
     location: Optional[str] = None
 
 

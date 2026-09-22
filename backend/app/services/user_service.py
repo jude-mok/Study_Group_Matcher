@@ -113,10 +113,10 @@ def delete_user_from_db(supabase: Client, user_id: str) -> None:
         )
 
 
-def update_user_password(supabase: Client, new_password: str) -> None:
+def update_user_password(supabase: Client, user_id: str, new_password: str) -> None:
     pass
     try:
-        supabase.auth.update_user({"password": new_password})
+        supabase.auth.admin.update_user_by_id(user_id, {"password": new_password})
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
