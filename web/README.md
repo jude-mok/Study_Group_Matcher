@@ -72,3 +72,6 @@ FLUTTER_BIN=/path/to/flutter/bin/flutter python3 web/scripts/build-app-preview.p
 ```
 
 The script copies Flutter sources to a temporary directory, substitutes local demo transports, and builds the actual screens. It does not edit the original mobile sources. Keep regenerated assets with the web deployment. Existing unfinished mobile features remain as in the original app; this is not a live multiuser backend. Vercel allows same-origin framing for this view.
+
+Production builds load the public API address from `.env.production`. This file
+contains no credentials. Vercel environment variables can override this value.
