@@ -50,5 +50,12 @@ instance/
 
 # Keep repository Markdown limited to README files.
 *.[mM][dD]
-![rR][eE][aA][dD][mM][eE].[mM][dD]
+!/README.md
+!/backend/README.md
+!/frontend/README.md
+!/web/README.md
 docs/
+
+render.yaml
+render.yml
+backend/test-results/
