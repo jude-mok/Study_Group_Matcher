@@ -47,3 +47,8 @@ Thumbs.db
 # Flask/FastAPI
 instance/
 .webassets-cache
+
+# Keep repository Markdown limited to README files.
+*.[mM][dD]
+![rR][eE][aA][dD][mM][eE].[mM][dD]
+docs/

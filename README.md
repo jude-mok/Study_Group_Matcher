@@ -15,5 +15,6 @@ npm run dev
 
 Open `http://127.0.0.1:5173` and select **Explore the demo**.
 
-See [free web deployment](docs/WEB_DEPLOYMENT.md) for Vercel settings, optional
-Render/Supabase setup, and the remaining backend work before live-user release.
+For a static demo deployment, set the Vercel project root to `web`, build with
+`npm run build`, and publish `dist`. Live mode requires a separately deployed
+FastAPI backend, `VITE_API_URL`, and validation against the real database.

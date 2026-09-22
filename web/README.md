@@ -57,8 +57,9 @@ These checks do not assert that the existing live Supabase database is ready.
 The web client uses the backend schemas but must still be validated against a
 dedicated non-production database with two test users before live release.
 
-See [web deployment](../docs/WEB_DEPLOYMENT.md) for free hosting and remaining
-live-service requirements.
+For Vercel, use `web` as the project root, `npm run build` as the build command,
+and `dist` as the output directory. Set `VITE_API_URL` to the live backend origin
+and allow the web origin in backend `CORS_ORIGINS` when enabling live accounts.
 
 ### Original app view
 
