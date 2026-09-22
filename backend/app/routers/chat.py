@@ -3,7 +3,7 @@ from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, WebSocket, WebSocketDisconnect, status
 from supabase import Client
 
-from app.database import get_supabase, get_supabase_admin
+from app.database import get_supabase_admin
 from app.dependencies import get_current_user
 from app.schemas.chat import ChatRoomCreate, ChatRoomResponse, MessageResponse
 from app.services.chat_service import (

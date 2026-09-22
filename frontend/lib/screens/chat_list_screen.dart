@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../models/chat_message.dart';
 import '../providers/auth_provider.dart';
 import '../services/chat_service.dart';
 import '../services/study_group_service.dart';
@@ -65,16 +66,31 @@ class _ChatListScreenState extends State<ChatListScreen> {
         for (final r in rooms) r['group_id'] as String: r,
       };
 
+      // Fetch latest message for each room in parallel
+      final latestMessages = <String, String>{};
+      final roomIds = rooms.map((r) => r['id'] as String).toList();
+      final msgFutures = roomIds.map((rid) =>
+          ChatService.getMessages(rid, limit: 1).catchError((_) => <ChatMessage>[]));
+      final msgResults = await Future.wait(msgFutures);
+      for (int i = 0; i < roomIds.length; i++) {
+        final msgs = msgResults[i];
+        if (msgs.isNotEmpty) {
+          latestMessages[roomIds[i]] = msgs.last.content;
+        }
+      }
+
       final chats = studyGroups.asMap().entries.map((entry) {
         final index = entry.key;
         final sg = entry.value;
         final room = roomMap[sg.id];
+        final roomId = room?['id'] as String?;
         final lastMessageAt = room?['last_message_at'] as String?;
+        final lastMsg = roomId != null ? latestMessages[roomId] : null;
         return ChatItem(
           id: sg.id,
-          roomId: room?['id'] as String?,
+          roomId: roomId,
           name: sg.name,
-          lastMessage: lastMessageAt != null ? 'Tap to continue the conversation' : 'No messages yet',
+          lastMessage: lastMsg ?? 'No messages yet',
           timestamp: lastMessageAt != null ? _formatTimestamp(lastMessageAt) : '',
           memberCount: sg.currentMembers ?? 1,
           hasUnread: false,

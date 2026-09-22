@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from typing import List, Optional
 from supabase import Client
 
-from app.database import get_supabase
+from app.database import get_supabase_admin
 from app.schemas.course import CourseResponse, CourseCreate
 from app.services.utils import handle_supabase_errors, normalize_code
 
@@ -13,7 +13,7 @@ router = APIRouter(prefix="/courses", tags=["courses"])
 @router.get("/", response_model=List[CourseResponse])
 @handle_supabase_errors
 async def get_all_courses(
-    supabase: Client = Depends(get_supabase)
+    supabase: Client = Depends(get_supabase_admin)
 ) -> List[CourseResponse]:
     pass
     result = supabase.table("courses").select("*").execute()
@@ -24,7 +24,7 @@ async def get_all_courses(
 @handle_supabase_errors
 async def search_courses(
     course_code: str = Query(..., min_length=1, description="Course code to search"),
-    supabase: Client = Depends(get_supabase)
+    supabase: Client = Depends(get_supabase_admin)
 ) -> List[CourseResponse]:
     pass
     normalized = normalize_code(course_code)
@@ -47,7 +47,7 @@ async def search_courses(
 @handle_supabase_errors
 async def get_course_by_id(
     course_id: int,
-    supabase: Client = Depends(get_supabase)
+    supabase: Client = Depends(get_supabase_admin)
 ) -> CourseResponse:
     pass
     result = (
@@ -70,7 +70,7 @@ async def get_course_by_id(
 @handle_supabase_errors
 async def create_course(
     request: CourseCreate,
-    supabase: Client = Depends(get_supabase)
+    supabase: Client = Depends(get_supabase_admin)
 ) -> CourseResponse:
     pass
     normalized_code = normalize_code(request.course_code)

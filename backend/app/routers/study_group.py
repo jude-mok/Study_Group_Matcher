@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from typing import List, Optional
 from supabase import Client
 
-from app.database import get_supabase, get_supabase_admin
+from app.database import get_supabase_admin
 from app.dependencies import get_current_user
 from app.schemas.join_request import JoinRequestResponse
 from app.schemas.study_group import GroupMemberResponse, StudyGroupCreate, StudyGroupResponse, StudyGroupRecommendation
@@ -235,7 +235,7 @@ def calculate_total_score(user: dict, group_averages: dict) -> tuple[float, dict
 async def create_study_group(
     request: StudyGroupCreate,
     current_user: dict = Depends(get_current_user),
-    supabase: Client = Depends(get_supabase),
+    supabase: Client = Depends(get_supabase_admin),
     supabase_admin: Client = Depends(get_supabase_admin),
 ) -> StudyGroupResponse:
     pass
@@ -276,7 +276,7 @@ async def create_study_group(
 @handle_supabase_errors
 async def search_study_groups_by_name(
     name: str = Query(..., min_length=1, description="Study group name to search"),
-    supabase: Client = Depends(get_supabase)
+    supabase: Client = Depends(get_supabase_admin)
 ) -> List[StudyGroupResponse]:
     pass
     result = (
@@ -293,7 +293,7 @@ async def search_study_groups_by_name(
 @handle_supabase_errors
 async def get_study_groups_by_course(
     course_id: int,
-    supabase: Client = Depends(get_supabase)
+    supabase: Client = Depends(get_supabase_admin)
 ) -> List[StudyGroupResponse]:
     pass
     result = (
@@ -311,7 +311,7 @@ async def get_study_groups_by_course(
 async def request_join_study_group(
     group_id: str,
     current_user: dict = Depends(get_current_user),
-    supabase: Client = Depends(get_supabase)
+    supabase: Client = Depends(get_supabase_admin)
 ):
     pass
     group = get_group_or_404(supabase, group_id)
@@ -330,21 +330,6 @@ async def request_join_study_group(
             detail="Already a member of this study group",
         )
 
-    # 이미 신청 중인지 확인
-    existing_request = (
-        supabase.table("group_join_requests")
-        .select("id, status")
-        .eq("user_id", current_user["id"])
-        .eq("study_group_id", group_id)
-        .eq("status", "pending")
-        .execute()
-    )
-    if existing_request.data:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="Join request already pending",
-        )
-
     # 정원 초과 확인
     member_count = (
         supabase.table("user_study_groups")
@@ -358,13 +343,35 @@ async def request_join_study_group(
             detail="Study group is full",
         )
 
-    supabase.table("group_join_requests").insert({
+    # 멤버로 바로 추가
+    supabase.table("user_study_groups").insert({
         "user_id": current_user["id"],
         "study_group_id": group_id,
-        "status": "pending",
+        "role": "member",
     }).execute()
 
-    return {"message": "Join request submitted. Waiting for admin approval."}
+    # 채팅방에도 자동 추가
+    room_result = (
+        supabase.table("chat_rooms")
+        .select("id")
+        .eq("group_id", group_id)
+        .execute()
+    )
+    if room_result.data:
+        room_id = room_result.data[0]["id"]
+        existing_room_member = (
+            supabase.table("room_members")
+            .select("user_id")
+            .eq("room_id", room_id)
+            .eq("user_id", current_user["id"])
+            .execute()
+        )
+        if not existing_room_member.data:
+            supabase.table("room_members").insert(
+                {"room_id": room_id, "user_id": current_user["id"]}
+            ).execute()
+
+    return {"message": "Successfully joined the study group"}
 
 
 @router.delete("/{group_id}/leave", status_code=status.HTTP_204_NO_CONTENT)
@@ -372,7 +379,7 @@ async def request_join_study_group(
 async def leave_study_group(
     group_id: str,
     current_user: dict = Depends(get_current_user),
-    supabase: Client = Depends(get_supabase),
+    supabase: Client = Depends(get_supabase_admin),
     supabase_admin: Client = Depends(get_supabase_admin),
 ):
     pass
@@ -414,7 +421,7 @@ async def leave_study_group(
 @handle_supabase_errors
 async def get_my_study_groups(
     current_user: dict = Depends(get_current_user),
-    supabase: Client = Depends(get_supabase)
+    supabase: Client = Depends(get_supabase_admin)
 ) -> List[StudyGroupResponse]:
     pass
     memberships = (
@@ -444,7 +451,7 @@ async def get_my_study_groups(
 async def get_recommended_study_groups(
     limit: int = Query(default=10, ge=1, le=50, description="Maximum number of recommendations"),
     current_user: dict = Depends(get_current_user),
-    supabase: Client = Depends(get_supabase)
+    supabase: Client = Depends(get_supabase_admin)
 ) -> List[StudyGroupRecommendation]:
     pass
     # Get user's enrolled courses
@@ -542,7 +549,7 @@ async def get_recommended_study_groups(
 async def get_group_members(
     group_id: str,
     current_user: dict = Depends(get_current_user),
-    supabase: Client = Depends(get_supabase),
+    supabase: Client = Depends(get_supabase_admin),
 ) -> List[GroupMemberResponse]:
     pass
     from app.services.schedule_service import assert_group_member
@@ -579,7 +586,7 @@ async def get_group_members(
 async def get_join_requests(
     group_id: str,
     current_user: dict = Depends(get_current_user),
-    supabase: Client = Depends(get_supabase),
+    supabase: Client = Depends(get_supabase_admin),
 ) -> List[JoinRequestResponse]:
     pass
     get_group_or_404(supabase, group_id)
@@ -607,7 +614,7 @@ async def accept_join_request(
     group_id: str,
     request_id: str,
     current_user: dict = Depends(get_current_user),
-    supabase: Client = Depends(get_supabase),
+    supabase: Client = Depends(get_supabase_admin),
     supabase_admin: Client = Depends(get_supabase_admin),
 ):
     pass
@@ -670,7 +677,7 @@ async def decline_join_request(
     group_id: str,
     request_id: str,
     current_user: dict = Depends(get_current_user),
-    supabase: Client = Depends(get_supabase),
+    supabase: Client = Depends(get_supabase_admin),
 ):
     pass
     get_group_or_404(supabase, group_id)
@@ -699,7 +706,7 @@ async def kick_member(
     group_id: str,
     user_id: str,
     current_user: dict = Depends(get_current_user),
-    supabase: Client = Depends(get_supabase),
+    supabase: Client = Depends(get_supabase_admin),
 ):
     pass
     get_group_or_404(supabase, group_id)

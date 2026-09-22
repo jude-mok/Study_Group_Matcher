@@ -85,7 +85,8 @@ async def signup(
 @handle_supabase_errors
 async def login(
     credentials: LoginRequest,
-    supabase: Client = Depends(get_supabase)
+    supabase: Client = Depends(get_supabase),
+    supabase_admin: Client = Depends(get_supabase_admin),
 ) -> TokenResponse:
     pass
     try:
@@ -105,7 +106,7 @@ async def login(
             detail="Incorrect email or password"
         )
 
-    user_data = get_user_by_email(supabase, credentials.nyu_email)
+    user_data = get_user_by_email(supabase_admin, credentials.nyu_email)
 
     return {
         "access_token": auth_response.session.access_token,
@@ -131,7 +132,8 @@ async def logout(
 @handle_supabase_errors
 async def refresh_token(
     refresh_request: RefreshTokenRequest,
-    supabase: Client = Depends(get_supabase)
+    supabase: Client = Depends(get_supabase),
+    supabase_admin: Client = Depends(get_supabase_admin),
 ) -> TokenResponse:
     pass
     auth_response = supabase.auth.refresh_session(refresh_request.refresh_token)
@@ -142,7 +144,7 @@ async def refresh_token(
             detail="Invalid refresh token"
         )
 
-    user_data = get_user_by_id(supabase, auth_response.user.id)
+    user_data = get_user_by_id(supabase_admin, auth_response.user.id)
 
     return {
         "access_token": auth_response.session.access_token,

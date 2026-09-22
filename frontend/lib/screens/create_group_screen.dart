@@ -296,7 +296,7 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
         _label(Icons.person_add, 'MAX MEMBERS'),
         const SizedBox(height: 8),
         Row(
-          children: [1, 2, 3, 4].map((n) {
+          children: [2, 3, 4].map((n) {
             final isSelected = n == _maxMembers;
             return Expanded(
               child: GestureDetector(

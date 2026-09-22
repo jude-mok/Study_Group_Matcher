@@ -4,7 +4,7 @@ from typing import List
 from fastapi import APIRouter, Depends, HTTPException, status
 from supabase import Client
 
-from app.database import get_supabase
+from app.database import get_supabase_admin
 from app.dependencies import get_current_user
 from app.schemas.schedule import ScheduleCreate, ScheduleResponse, ScheduleUpdate
 from app.services.schedule_service import (
@@ -30,7 +30,7 @@ def _as_datetime(value):
 @handle_supabase_errors
 async def get_my_schedules(
     current_user: dict = Depends(get_current_user),
-    supabase: Client = Depends(get_supabase),
+    supabase: Client = Depends(get_supabase_admin),
 ) -> List[ScheduleResponse]:
     pass
     result = (
@@ -49,7 +49,7 @@ async def get_my_schedules(
 async def get_group_schedules(
     group_id: str,
     current_user: dict = Depends(get_current_user),
-    supabase: Client = Depends(get_supabase),
+    supabase: Client = Depends(get_supabase_admin),
 ) -> List[ScheduleResponse]:
     pass
     assert_group_member(supabase, group_id, current_user["id"])
@@ -69,7 +69,7 @@ async def get_group_schedules(
 async def get_schedule(
     schedule_id: str,
     current_user: dict = Depends(get_current_user),
-    supabase: Client = Depends(get_supabase),
+    supabase: Client = Depends(get_supabase_admin),
 ) -> ScheduleResponse:
     pass
     schedule = get_schedule_by_id(supabase, schedule_id)
@@ -90,7 +90,7 @@ async def get_schedule(
 async def create_schedule(
     request: ScheduleCreate,
     current_user: dict = Depends(get_current_user),
-    supabase: Client = Depends(get_supabase),
+    supabase: Client = Depends(get_supabase_admin),
 ) -> ScheduleResponse:
     pass
     if request.start_time >= request.end_time:
@@ -129,7 +129,7 @@ async def update_schedule(
     schedule_id: str,
     request: ScheduleUpdate,
     current_user: dict = Depends(get_current_user),
-    supabase: Client = Depends(get_supabase),
+    supabase: Client = Depends(get_supabase_admin),
 ) -> ScheduleResponse:
     pass
     schedule = get_schedule_by_id(supabase, schedule_id)
@@ -176,7 +176,7 @@ async def update_schedule(
 async def delete_schedule(
     schedule_id: str,
     current_user: dict = Depends(get_current_user),
-    supabase: Client = Depends(get_supabase),
+    supabase: Client = Depends(get_supabase_admin),
 ) -> None:
     pass
     schedule = get_schedule_by_id(supabase, schedule_id)

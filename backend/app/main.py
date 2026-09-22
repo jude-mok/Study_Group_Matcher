@@ -4,7 +4,9 @@ from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.encoders import jsonable_encoder
 
+from app.config import get_settings
 from app.routers import auth, chat, course, meeting, schedule, user, user_course, study_group
 
 
@@ -36,7 +38,7 @@ app.include_router(meeting.router)
 # CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=get_settings().cors_origins_list,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -45,9 +47,12 @@ app.add_middleware(
 
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
-    print(f"[422 DEBUG] body={await request.body()}")
-    print(f"[422 DEBUG] errors={exc.errors()}")
-    return JSONResponse(status_code=422, content={"detail": exc.errors()})
+    # Validation failures can contain passwords and profile data. Never log bodies.
+    errors = [
+        {"loc": error["loc"], "msg": error["msg"], "type": error["type"]}
+        for error in exc.errors()
+    ]
+    return JSONResponse(status_code=422, content=jsonable_encoder({"detail": errors}))
 
 
 @app.get("/")
