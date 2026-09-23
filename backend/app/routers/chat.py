@@ -14,7 +14,7 @@ from app.services.chat_service import (
     insert_message,
 )
 from app.services.schedule_service import assert_group_member
-from app.services.utils import handle_supabase_errors
+from app.services.utils import handle_route_errors
 from app.ws.connection_manager import ConnectionManager
 
 router = APIRouter(tags=["chat"])
@@ -22,7 +22,7 @@ manager = ConnectionManager()
 
 
 @router.get("/rooms", response_model=List[ChatRoomResponse])
-@handle_supabase_errors
+@handle_route_errors
 async def list_my_rooms(
     current_user: dict = Depends(get_current_user),
     supabase_admin: Client = Depends(get_supabase_admin),
@@ -32,7 +32,7 @@ async def list_my_rooms(
 
 
 @router.post("/rooms", response_model=ChatRoomResponse, status_code=status.HTTP_201_CREATED)
-@handle_supabase_errors
+@handle_route_errors
 async def create_chat_room(
     request: ChatRoomCreate,
     current_user: dict = Depends(get_current_user),
@@ -46,7 +46,7 @@ async def create_chat_room(
 
 
 @router.get("/rooms/{room_id}/messages", response_model=List[MessageResponse])
-@handle_supabase_errors
+@handle_route_errors
 async def get_room_messages(
     room_id: str,
     limit: int = Query(default=50, ge=1, le=100),

@@ -9,7 +9,7 @@ from app.schemas.join_request import JoinRequestResponse
 from app.schemas.study_group import GroupMemberResponse, StudyGroupCreate, StudyGroupResponse, StudyGroupRecommendation
 from app.services.chat_service import create_room
 from app.services.group_service import assert_group_admin, get_group_or_404
-from app.services.utils import handle_supabase_errors
+from app.services.utils import handle_route_errors
 
 
 router = APIRouter(prefix="/study-groups", tags=["study-groups"])
@@ -232,7 +232,7 @@ def calculate_total_score(user: dict, group_averages: dict) -> tuple[float, dict
 
 
 @router.post("/", response_model=StudyGroupResponse, status_code=status.HTTP_201_CREATED)
-@handle_supabase_errors
+@handle_route_errors
 async def create_study_group(
     request: StudyGroupCreate,
     current_user: dict = Depends(get_current_user),
@@ -274,7 +274,7 @@ async def create_study_group(
 
 
 @router.get("/search", response_model=List[StudyGroupResponse])
-@handle_supabase_errors
+@handle_route_errors
 async def search_study_groups_by_name(
     name: str = Query(..., min_length=1, description="Study group name to search"),
     supabase: Client = Depends(get_supabase_admin)
@@ -291,7 +291,7 @@ async def search_study_groups_by_name(
 
 
 @router.get("/course/{course_id}", response_model=List[StudyGroupResponse])
-@handle_supabase_errors
+@handle_route_errors
 async def get_study_groups_by_course(
     course_id: int,
     supabase: Client = Depends(get_supabase_admin)
@@ -308,7 +308,7 @@ async def get_study_groups_by_course(
 
 
 @router.post("/{group_id}/join", status_code=status.HTTP_201_CREATED)
-@handle_supabase_errors
+@handle_route_errors
 async def request_join_study_group(
     group_id: str,
     current_user: dict = Depends(get_current_user),
@@ -376,7 +376,7 @@ async def request_join_study_group(
 
 
 @router.delete("/{group_id}/leave", status_code=status.HTTP_204_NO_CONTENT)
-@handle_supabase_errors
+@handle_route_errors
 async def leave_study_group(
     group_id: str,
     current_user: dict = Depends(get_current_user),
@@ -420,7 +420,7 @@ async def leave_study_group(
 
 
 @router.get("/me", response_model=List[StudyGroupResponse])
-@handle_supabase_errors
+@handle_route_errors
 async def get_my_study_groups(
     current_user: dict = Depends(get_current_user),
     supabase: Client = Depends(get_supabase_admin)
@@ -449,7 +449,7 @@ async def get_my_study_groups(
 
 
 @router.get("/recommend", response_model=List[StudyGroupRecommendation])
-@handle_supabase_errors
+@handle_route_errors
 async def get_recommended_study_groups(
     limit: int = Query(default=10, ge=1, le=50, description="Maximum number of recommendations"),
     current_user: dict = Depends(get_current_user),
@@ -547,7 +547,7 @@ async def get_recommended_study_groups(
 
 
 @router.get("/{group_id}/members", response_model=List[GroupMemberResponse])
-@handle_supabase_errors
+@handle_route_errors
 async def get_group_members(
     group_id: str,
     current_user: dict = Depends(get_current_user),
@@ -584,7 +584,7 @@ async def get_group_members(
 
 
 @router.get("/{group_id}/requests", response_model=List[JoinRequestResponse])
-@handle_supabase_errors
+@handle_route_errors
 async def get_join_requests(
     group_id: str,
     current_user: dict = Depends(get_current_user),
@@ -611,7 +611,7 @@ async def get_join_requests(
 
 
 @router.post("/{group_id}/requests/{request_id}/accept", status_code=status.HTTP_200_OK)
-@handle_supabase_errors
+@handle_route_errors
 async def accept_join_request(
     group_id: str,
     request_id: str,
@@ -686,7 +686,7 @@ async def accept_join_request(
 
 
 @router.post("/{group_id}/requests/{request_id}/decline", status_code=status.HTTP_200_OK)
-@handle_supabase_errors
+@handle_route_errors
 async def decline_join_request(
     group_id: str,
     request_id: str,
@@ -715,7 +715,7 @@ async def decline_join_request(
 
 
 @router.delete("/{group_id}/members/{user_id}", status_code=status.HTTP_200_OK)
-@handle_supabase_errors
+@handle_route_errors
 async def kick_member(
     group_id: str,
     user_id: str,

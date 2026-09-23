@@ -10,7 +10,7 @@ from app.services.user_service import (
     update_user_password,
     delete_user_from_db
 )
-from app.services.utils import handle_supabase_errors
+from app.services.utils import handle_route_errors
 
 
 router = APIRouter(prefix="/users", tags=["users"])
@@ -25,7 +25,7 @@ async def get_current_user_profile(
 
 
 @router.get("/{user_id}", response_model=UserResponse)
-@handle_supabase_errors
+@handle_route_errors
 async def get_user_profile(
     user_id: str,
     current_user: dict = Depends(get_current_user),
@@ -36,7 +36,7 @@ async def get_user_profile(
 
 
 @router.put("/me", response_model=UserResponse)
-@handle_supabase_errors
+@handle_route_errors
 async def update_current_user_profile(
     user_update: UserUpdate,
     current_user: dict = Depends(get_current_user),
@@ -65,7 +65,7 @@ async def update_current_user_profile(
 
 
 @router.delete("/me", status_code=status.HTTP_204_NO_CONTENT)
-@handle_supabase_errors
+@handle_route_errors
 async def delete_current_user(
     current_user: dict = Depends(get_current_user),
     supabase: Client = Depends(get_supabase_admin)

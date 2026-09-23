@@ -21,7 +21,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="Study Group Matcher API",
     description="API for matching NYU students with similar courses and work willingness",
-    version="1.0.0",
+    version="2.0.0",
     lifespan=lifespan,
 )
 
@@ -45,9 +45,9 @@ app.add_middleware(
 )
 
 
+#Error handler if user's request is invalid format
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
-    # Validation failures can contain passwords and profile data. Never log bodies.
     errors = [
         {"loc": error["loc"], "msg": error["msg"], "type": error["type"]}
         for error in exc.errors()

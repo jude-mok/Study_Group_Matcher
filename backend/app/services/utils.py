@@ -1,9 +1,12 @@
 from fastapi import HTTPException, status
 from functools import wraps
 from typing import Optional
+import logging
+
+logger = logging.getLogger(__name__)
 
 
-def handle_supabase_errors(func):
+def handle_route_errors(func):
     @wraps(func)
     async def wrapper(*args, **kwargs):
         try:
@@ -11,8 +14,7 @@ def handle_supabase_errors(func):
         except HTTPException:
             raise
         except Exception as e:
-            import traceback
-            print(f"[ROUTE ERROR] {func.__name__}: {traceback.format_exc()}")
+            logger.exception("Route failed: %s", func.__name__)
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail=str(e)

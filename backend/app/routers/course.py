@@ -5,14 +5,14 @@ from supabase import Client
 from app.database import get_supabase_admin
 from app.dependencies import get_current_user
 from app.schemas.course import CourseResponse, CourseCreate
-from app.services.utils import handle_supabase_errors, normalize_code
+from app.services.utils import handle_route_errors, normalize_code
 
 
 router = APIRouter(prefix="/courses", tags=["courses"])
 
 
 @router.get("/", response_model=List[CourseResponse])
-@handle_supabase_errors
+@handle_route_errors
 async def get_all_courses(
     supabase: Client = Depends(get_supabase_admin)
 ) -> List[CourseResponse]:
@@ -22,7 +22,7 @@ async def get_all_courses(
 
 
 @router.get("/search", response_model=List[CourseResponse])
-@handle_supabase_errors
+@handle_route_errors
 async def search_courses(
     course_code: str = Query(..., min_length=1, description="Course code to search"),
     supabase: Client = Depends(get_supabase_admin)
@@ -45,7 +45,7 @@ async def search_courses(
 
 
 @router.get("/{course_id}", response_model=CourseResponse)
-@handle_supabase_errors
+@handle_route_errors
 async def get_course_by_id(
     course_id: int,
     supabase: Client = Depends(get_supabase_admin)
@@ -68,7 +68,7 @@ async def get_course_by_id(
 
 
 @router.post("/", response_model=CourseResponse, status_code=status.HTTP_201_CREATED)
-@handle_supabase_errors
+@handle_route_errors
 async def create_course(
     request: CourseCreate,
     current_user: dict = Depends(get_current_user),

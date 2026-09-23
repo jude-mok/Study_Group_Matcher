@@ -12,7 +12,7 @@ from app.services.schedule_service import (
     assert_schedule_owner,
     get_schedule_by_id,
 )
-from app.services.utils import handle_supabase_errors
+from app.services.utils import handle_route_errors
 
 
 router = APIRouter(prefix="/schedules", tags=["schedules"])
@@ -27,7 +27,7 @@ def _as_datetime(value):
 
 
 @router.get("/me", response_model=List[ScheduleResponse])
-@handle_supabase_errors
+@handle_route_errors
 async def get_my_schedules(
     current_user: dict = Depends(get_current_user),
     supabase: Client = Depends(get_supabase_admin),
@@ -45,7 +45,7 @@ async def get_my_schedules(
 
 
 @router.get("/group/{group_id}", response_model=List[ScheduleResponse])
-@handle_supabase_errors
+@handle_route_errors
 async def get_group_schedules(
     group_id: str,
     current_user: dict = Depends(get_current_user),
@@ -65,7 +65,7 @@ async def get_group_schedules(
 
 
 @router.get("/{schedule_id}", response_model=ScheduleResponse)
-@handle_supabase_errors
+@handle_route_errors
 async def get_schedule(
     schedule_id: str,
     current_user: dict = Depends(get_current_user),
@@ -86,7 +86,7 @@ async def get_schedule(
 
 
 @router.post("/", response_model=ScheduleResponse, status_code=status.HTTP_201_CREATED)
-@handle_supabase_errors
+@handle_route_errors
 async def create_schedule(
     request: ScheduleCreate,
     current_user: dict = Depends(get_current_user),
@@ -124,7 +124,7 @@ async def create_schedule(
 
 
 @router.put("/{schedule_id}", response_model=ScheduleResponse)
-@handle_supabase_errors
+@handle_route_errors
 async def update_schedule(
     schedule_id: str,
     request: ScheduleUpdate,
@@ -172,7 +172,7 @@ async def update_schedule(
 
 
 @router.delete("/{schedule_id}", status_code=status.HTTP_204_NO_CONTENT)
-@handle_supabase_errors
+@handle_route_errors
 async def delete_schedule(
     schedule_id: str,
     current_user: dict = Depends(get_current_user),

@@ -22,14 +22,14 @@ from app.services.meeting_service import (
     get_room_or_404,
     get_vote_summary,
 )
-from app.services.utils import handle_supabase_errors
+from app.services.utils import handle_route_errors
 
 
 router = APIRouter(prefix="/meetings", tags=["meetings"])
 
 
 @router.post("/proposals", response_model=MeetingProposalResponse, status_code=status.HTTP_201_CREATED)
-@handle_supabase_errors
+@handle_route_errors
 async def create_proposal(
     request: MeetingProposalCreate,
     current_user: dict = Depends(get_current_user),
@@ -81,7 +81,7 @@ async def create_proposal(
 
 
 @router.get("/proposals/{room_id}", response_model=List[MeetingProposalResponse])
-@handle_supabase_errors
+@handle_route_errors
 async def get_proposals(
     room_id: str,
     current_user: dict = Depends(get_current_user),
@@ -102,7 +102,7 @@ async def get_proposals(
 
 
 @router.post("/votes", status_code=status.HTTP_200_OK)
-@handle_supabase_errors
+@handle_route_errors
 async def cast_vote(
     request: MeetingVoteCreate,
     current_user: dict = Depends(get_current_user),
@@ -159,7 +159,7 @@ async def cast_vote(
 
 
 @router.get("/results/{room_id}", response_model=List[MeetingResultResponse])
-@handle_supabase_errors
+@handle_route_errors
 async def get_results(
     room_id: str,
     current_user: dict = Depends(get_current_user),

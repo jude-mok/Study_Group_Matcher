@@ -20,14 +20,14 @@ from app.services.user_service import (
     check_user_exists_by_nyu_id,
     create_user_in_db
 )
-from app.services.utils import handle_supabase_errors
+from app.services.utils import handle_route_errors
 
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 
 @router.post("/signup", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
-@handle_supabase_errors
+@handle_route_errors
 async def signup(
     user: UserCreate,
     supabase: Client = Depends(get_supabase_admin)
@@ -83,7 +83,7 @@ async def signup(
 
 
 @router.post("/login", response_model=TokenResponse)
-@handle_supabase_errors
+@handle_route_errors
 async def login(
     credentials: LoginRequest,
     supabase: Client = Depends(get_supabase),
@@ -119,7 +119,7 @@ async def login(
 
 
 @router.post("/logout", status_code=status.HTTP_200_OK)
-@handle_supabase_errors
+@handle_route_errors
 async def logout(
     _current_user: dict = Depends(get_current_user),  # Auth required
     credentials: HTTPAuthorizationCredentials = Depends(security),
@@ -131,7 +131,7 @@ async def logout(
 
 
 @router.post("/refresh", response_model=TokenResponse)
-@handle_supabase_errors
+@handle_route_errors
 async def refresh_token(
     refresh_request: RefreshTokenRequest,
     supabase: Client = Depends(get_supabase),
@@ -158,7 +158,7 @@ async def refresh_token(
 
 
 @router.post("/password-reset/request", status_code=status.HTTP_200_OK)
-@handle_supabase_errors
+@handle_route_errors
 async def request_password_reset(
     reset_request: PasswordResetRequest,
     supabase: Client = Depends(get_supabase)
@@ -170,7 +170,7 @@ async def request_password_reset(
 
 
 @router.post("/password-reset/confirm", status_code=status.HTTP_200_OK)
-@handle_supabase_errors
+@handle_route_errors
 async def confirm_password_reset(
     reset_confirm: PasswordResetConfirm,
     identity = Depends(get_auth_identity),
@@ -182,7 +182,7 @@ async def confirm_password_reset(
 
 
 @router.get("/verify-email-status", status_code=status.HTTP_200_OK)
-@handle_supabase_errors
+@handle_route_errors
 async def check_email_verification(
     identity = Depends(get_auth_identity),
 ):

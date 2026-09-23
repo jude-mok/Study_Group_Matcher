@@ -5,14 +5,14 @@ from supabase import Client
 from app.database import get_supabase_admin
 from app.dependencies import get_current_user
 from app.schemas.user_course import UserCourseCreate, UserCourseResponse
-from app.services.utils import handle_supabase_errors
+from app.services.utils import handle_route_errors
 
 
 router = APIRouter(prefix="/user-courses", tags=["user-courses"])
 
 
 @router.get("/", response_model=List[UserCourseResponse])
-@handle_supabase_errors
+@handle_route_errors
 async def get_my_courses(
     current_user: dict = Depends(get_current_user),
     supabase: Client = Depends(get_supabase_admin),
@@ -27,7 +27,7 @@ async def get_my_courses(
 
 
 @router.post("/", response_model=UserCourseResponse, status_code=status.HTTP_201_CREATED)
-@handle_supabase_errors
+@handle_route_errors
 async def enroll_in_course(
     request: UserCourseCreate,
     current_user: dict = Depends(get_current_user),
@@ -66,7 +66,7 @@ async def enroll_in_course(
 
 
 @router.delete("/", status_code=status.HTTP_204_NO_CONTENT)
-@handle_supabase_errors
+@handle_route_errors
 async def unenroll_from_course(
     course_id: int,
     current_user: dict = Depends(get_current_user),

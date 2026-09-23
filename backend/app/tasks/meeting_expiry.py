@@ -11,7 +11,6 @@ scheduler = AsyncIOScheduler()
 
 
 async def check_expired_proposals() -> None:
-    # 모듈 레벨 import 시 순환 참조 방지를 위해 지연 import
     from app.routers.chat import manager
 
     supabase = get_supabase_admin()  # RLS bypass 필요
