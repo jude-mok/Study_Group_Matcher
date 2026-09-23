@@ -10,21 +10,23 @@ from app.config import get_settings
 from app.routers import auth, chat, course, meeting, schedule, user, user_course, study_group
 
 
+#meeting scheduler for group meeting vote
 @asynccontextmanager
-async def lifespan(app: FastAPI):
+async def meeting_scheduler(app: FastAPI):
     from app.tasks.meeting_expiry import start_scheduler, stop_scheduler
     start_scheduler()
-    yield
-    stop_scheduler()
+    try:
+        yield
+    finally:
+        stop_scheduler()
 
 
 app = FastAPI(
     title="Study Group Matcher API",
     description="API for matching NYU students with similar courses and work willingness",
     version="2.0.0",
-    lifespan=lifespan,
+    lifespan=meeting_scheduler,
 )
-
 # Include routers
 app.include_router(auth.router)
 app.include_router(user.router)
