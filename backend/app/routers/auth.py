@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from supabase import Client
+from supabase_auth.errors import AuthApiError
 
 from app.database import get_supabase, get_supabase_admin
 from app.dependencies import get_current_user, get_auth_identity, security
@@ -21,8 +22,10 @@ from app.services.user_service import (
     create_user_in_db
 )
 from app.services.utils import handle_route_errors
+import logging
 
 
+logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 
@@ -30,35 +33,10 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 @handle_route_errors
 async def signup(
     user: UserCreate,
-    supabase: Client = Depends(get_supabase_admin)
+    supabase_admin: Client = Depends(get_supabase_admin)
 ) -> UserResponse:
-    pass
-    if check_user_exists_by_email(supabase, user.nyu_email):
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="Email already registered"
-        )
-
-    if check_user_exists_by_nyu_id(supabase, user.nyu_id):
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="NYU ID already registered"
-        )
-
-    auth_response = supabase.auth.admin.create_user({
-        "email": user.nyu_email,
-        "password": user.password,
-        "email_confirm": True,
-        "user_metadata": {
-            "name": user.name
-        }
-    })
-
-    if not auth_response.user:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Failed to create auth user"
-        )
+    _ensure_user_not_exist(user, supabase_admin)
+    auth_response = _create_user_credential(user, supabase_admin)
 
     user_data = {
         "id": auth_response.user.id,
@@ -70,16 +48,58 @@ async def signup(
         "academic_standing": user.academic_standing,
         "work_willingness": user.work_willingness,
         "preferred_location": user.preferred_location,
-        "time_preference": user.time_preference,        
-        "avg_gpa": user.avg_gpa   
+        "time_preference": user.time_preference,
+        "avg_gpa": user.avg_gpa
     }
 
     try:
-        return create_user_in_db(supabase, user_data)
-    except HTTPException:
-        # Rollback: delete auth account if DB insert fails
-        supabase.auth.admin.delete_user(auth_response.user.id)
+        return create_user_in_db(supabase_admin, user_data)
+    except Exception as e:
+        _rollback_auth_user(supabase_admin, auth_response.user.id)
+        if isinstance(e, HTTPException):
+            logger.error("signup.profile_save_failed status=%s", e.status_code)
         raise
+
+
+def _ensure_user_not_exist(user: UserCreate, supabase_admin : Client):
+    if check_user_exists_by_email(supabase_admin, user.nyu_email):
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="User with this email exists"
+        )
+
+    if check_user_exists_by_nyu_id(supabase_admin, user.nyu_id):
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="User with this NYU id exists"
+        )
+
+def _create_user_credential(user: UserCreate, supabase_admin : Client):
+    auth_response = supabase_admin.auth.admin.create_user({
+        "email": user.nyu_email,
+        "password": user.password,
+        "email_confirm": True,
+        "user_metadata": {
+            "name": user.name
+        }
+    })
+
+    if not auth_response.user:
+        logger.error("signup.auth_response_missing_user")
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail="Unable to complete signup. Please try again."
+        )
+
+    return auth_response
+
+def _rollback_auth_user(supabase_admin: Client, user_id: str) -> None:
+    try:
+        supabase_admin.auth.admin.delete_user(user_id)
+    except Exception as e:
+        logger.error(
+            "signup.rollback_failed error_type=%s", type(e).__name__,
+        )
 
 
 @router.post("/login", response_model=TokenResponse)
@@ -89,22 +109,24 @@ async def login(
     supabase: Client = Depends(get_supabase),
     supabase_admin: Client = Depends(get_supabase_admin),
 ) -> TokenResponse:
-    pass
     try:
         auth_response = supabase.auth.sign_in_with_password({
             "email": credentials.nyu_email,
             "password": credentials.password
         })
-    except Exception as e:
+    except AuthApiError as e:
+        if e.code != "invalid_credentials":
+            raise  # leading unexpected error to hanlder.
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect email or password"
-        )
+        ) from e
 
     if not auth_response.session:
+        logger.error("login.auth_response_missing_session")
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect email or password"
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail="Unable to complete login. Please try again."
         )
 
     user_data = get_user_by_email(supabase_admin, credentials.nyu_email)
@@ -118,14 +140,14 @@ async def login(
     }
 
 
+
 @router.post("/logout", status_code=status.HTTP_200_OK)
 @handle_route_errors
 async def logout(
-    _current_user: dict = Depends(get_current_user),  # Auth required
+    _current_user: dict = Depends(get_current_user),
     credentials: HTTPAuthorizationCredentials = Depends(security),
     supabase: Client = Depends(get_supabase_admin),
 ):
-    pass
     supabase.auth.admin.sign_out(credentials.credentials)
     return {"message": "Successfully logged out"}
 
@@ -137,7 +159,6 @@ async def refresh_token(
     supabase: Client = Depends(get_supabase),
     supabase_admin: Client = Depends(get_supabase_admin),
 ) -> TokenResponse:
-    pass
     auth_response = supabase.auth.refresh_session(refresh_request.refresh_token)
 
     if not auth_response.session or not auth_response.user:
@@ -163,7 +184,6 @@ async def request_password_reset(
     reset_request: PasswordResetRequest,
     supabase: Client = Depends(get_supabase)
 ):
-    pass
     supabase.auth.reset_password_email(reset_request.email)
     # Always return success to prevent email enumeration
     return {"message": "If the email exists, a reset link has been sent"}
@@ -176,7 +196,6 @@ async def confirm_password_reset(
     identity = Depends(get_auth_identity),
     supabase: Client = Depends(get_supabase_admin)
 ):
-    pass
     supabase.auth.admin.update_user_by_id(identity.id, {"password": reset_confirm.new_password})
     return {"message": "Password updated successfully"}
 
@@ -186,7 +205,6 @@ async def confirm_password_reset(
 async def check_email_verification(
     identity = Depends(get_auth_identity),
 ):
-    pass
     return {
         "email_verified": identity.email_confirmed_at is not None,
         "email": identity.email

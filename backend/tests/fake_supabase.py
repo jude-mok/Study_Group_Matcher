@@ -1,10 +1,10 @@
-pass
 from collections import defaultdict
 from copy import deepcopy
 from datetime import datetime, timezone
 from types import SimpleNamespace as NS
 from uuid import uuid4
 import re
+from supabase_auth.errors import AuthApiError
 
 
 def now():
@@ -37,7 +37,7 @@ class Auth:
         for uid, account in self.accounts.items():
             if account['email'] == data['email'] and account['password'] == data['password']:
                 return self.session(uid)
-        raise ValueError('Invalid credentials')
+        raise AuthApiError('Invalid credentials', 400, 'invalid_credentials')
 
     def get_user(self, token=None):
         uid = self.tokens.get(token) if token else self.session_user
