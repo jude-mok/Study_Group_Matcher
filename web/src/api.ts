@@ -146,3 +146,16 @@ export async function socketUrl(roomId: string) {
   url.searchParams.set("token", session!.access_token);
   return url.toString();
 }
+
+export function requestPasswordReset(email: string) {
+  return request("/auth/password-reset/request", "POST", { email });
+}
+
+export function confirmPasswordReset(new_password: string, token: string) {
+  return request(
+    "/auth/password-reset/confirm",
+    "POST",
+    { new_password },
+    token,
+  );
+}

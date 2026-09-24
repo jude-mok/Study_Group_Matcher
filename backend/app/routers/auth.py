@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from supabase import Client
 from supabase_auth.errors import AuthApiError
 
+from app.config import get_settings
 from app.database import get_supabase, get_supabase_admin
 from app.dependencies import get_current_user, get_auth_identity, security
 from fastapi.security import HTTPAuthorizationCredentials
@@ -184,7 +185,9 @@ async def request_password_reset(
     reset_request: PasswordResetRequest,
     supabase: Client = Depends(get_supabase)
 ):
-    supabase.auth.reset_password_email(reset_request.email)
+    redirect = get_settings().password_reset_redirect_url
+    options = {"redirect_to": redirect} if redirect else {}
+    supabase.auth.reset_password_email(reset_request.email, options)
     # Always return success to prevent email enumeration
     return {"message": "If the email exists, a reset link has been sent"}
 

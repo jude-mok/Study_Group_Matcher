@@ -1,3 +1,4 @@
+import PasswordReset from "./PasswordReset";
 import { useState, type FormEvent } from "react";
 import {
   ArrowRight,
@@ -23,7 +24,9 @@ export default function Auth({
   enterLive: (user: User) => void;
   showApp: () => void;
 }) {
-  const [mode, setMode] = useState<"login" | "signup" | null>(null);
+  const [mode, setMode] = useState<"login" | "signup" | "reset" | null>(() =>
+    new URLSearchParams(location.search).get("signin") === "1" ? "login" : null,
+  );
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
@@ -303,7 +306,13 @@ export default function Auth({
       </footer>
       {mode && (
         <Modal
-          title={mode === "login" ? "Welcome back." : "Find your study people."}
+          title={
+            mode === "login"
+              ? "Welcome back."
+              : mode === "reset"
+                ? "Account recovery"
+                : "Find your study people."
+          }
           busy={busy}
           close={() => setMode(null)}
         >
@@ -318,6 +327,13 @@ export default function Auth({
                 Explore the demo <ArrowRight size={16} />
               </button>
             </div>
+          ) : mode === "reset" ? (
+            <PasswordReset
+              onDone={() => {
+                setMode("login");
+                setError("");
+              }}
+            />
           ) : (
             <form onSubmit={submit} className="form-stack">
               {mode === "signup" && (
@@ -405,6 +421,19 @@ export default function Auth({
                   required
                 />
               </label>
+              {mode === "login" && (
+                <button
+                  type="button"
+                  className="text-button"
+                  disabled={busy}
+                  onClick={() => {
+                    setMode("reset");
+                    setError("");
+                  }}
+                >
+                  Forgot password?
+                </button>
+              )}
               {error && (
                 <p role="alert" className="form-error">
                   {error}

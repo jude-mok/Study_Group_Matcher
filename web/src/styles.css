@@ -2964,3 +2964,7 @@ dialog::backdrop {
     display: none;
   }
 }
+
+.recovery-page { max-width: 480px; margin: 8vh auto; padding: 24px; }
+.recovery-page section { background: white; border-radius: 20px; padding: 28px; }
+.recovery-page input { display: block; width: 100%; box-sizing: border-box; margin: 8px 0 16px; padding: 12px; }

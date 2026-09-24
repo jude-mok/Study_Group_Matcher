@@ -75,3 +75,22 @@ The script copies Flutter sources to a temporary directory, substitutes local de
 
 Production builds load the public API address from `.env.production`. This file
 contains no credentials. Vercel environment variables can override this value.
+
+### Password recovery
+
+The sign-in dialog includes **Forgot password?**. The recovery page works even
+when an ordinary app session is already active. Recovery credentials are read
+from the Supabase implicit-flow fragment, removed from the URL immediately, and
+kept only in memory; reloading requires reopening/requesting a recovery link.
+
+Deployment setup:
+1. Set backend `PASSWORD_RESET_REDIRECT_URL` to `https://YOUR_WEB_HOST/?reset=1`.
+2. Add that exact URL under Supabase Authentication → URL Configuration → Redirect URLs.
+3. Keep the Reset Password email link using `{{ .ConfirmationURL }}`. This
+   implementation uses the backend SDK's default implicit flow, not PKCE or a
+   custom token-hash email template.
+4. Keep `VITE_API_URL` pointing to the backend and allow the web origin in CORS.
+
+If no redirect override is set, Supabase's configured Site URL is used. Before
+release, verify actual email delivery and click-through using a test account.
+The automated tests use fake credentials and do not send real emails.

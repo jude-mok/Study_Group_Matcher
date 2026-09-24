@@ -20,6 +20,8 @@ class Settings(BaseSettings):
     supabase_service_role_key: str
     supabase_jwt_secret: str
 
+    password_reset_redirect_url: str | None = None
+
     # CORS
     cors_origins: str = "http://localhost:3000,http://localhost:5173,http://127.0.0.1:5173,http://localhost:8000"
 

@@ -109,3 +109,38 @@ describe("authenticated API client", () => {
     ).resolves.toBeUndefined();
   });
 });
+
+it("sends password recovery credentials explicitly without replacing the login session", async () => {
+  const fetcher = vi.fn().mockResolvedValue(json({ message: "OK" }));
+  vi.stubGlobal("fetch", fetcher);
+  const api = await import("./api");
+  api.setSession(previous);
+  await api.requestPasswordReset("student@nyu.edu");
+  expect(fetcher.mock.calls[0][0]).toContain("/auth/password-reset/request");
+  expect(fetcher.mock.calls[0][1].headers.Authorization).toBeUndefined();
+  await api.confirmPasswordReset("new-test-password", "recovery-only");
+  expect(fetcher.mock.calls[1][1].headers.Authorization).toBe(
+    "Bearer recovery-only",
+  );
+  expect(api.getSession()).toEqual(previous);
+});
+
+it("only treats recovery links as password reset credentials", async () => {
+  const { readRecoveryLink } = await import("./PasswordReset");
+  expect(
+    readRecoveryLink(new URL("https://web.test/#how-it-works")),
+  ).toBeNull();
+  expect(
+    readRecoveryLink(new URL("https://web.test/?reset=1#error=expired")),
+  ).toEqual({ token: null });
+  expect(
+    readRecoveryLink(
+      new URL("https://web.test/?reset=1#type=signup&access_token=wrong"),
+    ),
+  ).toEqual({ token: null });
+  expect(
+    readRecoveryLink(
+      new URL("https://web.test/#type=recovery&access_token=test-only"),
+    ),
+  ).toEqual({ token: "test-only" });
+});

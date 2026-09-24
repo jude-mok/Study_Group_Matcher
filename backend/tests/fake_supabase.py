@@ -56,7 +56,7 @@ class Auth:
     def sign_out(self, jwt=None):
         self.session_user = None
 
-    def reset_password_email(self, email):
+    def reset_password_email(self, email, options=None):
         pass  # No email is ever sent by these tests.
 
     def update_user(self, data):
