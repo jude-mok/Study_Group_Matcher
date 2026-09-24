@@ -23,7 +23,6 @@ def _extract_member_count(group: dict) -> int:
 
 
 def _attach_group_metadata(supabase: Client, groups: List[dict]) -> List[dict]:
-    pass
     if not groups:
         return groups
 
@@ -62,7 +61,6 @@ WEIGHT_TIME = 10
 
 
 def calculate_work_willingness_score(user_val: int, avg_val: float) -> float:
-    pass
     diff = abs(user_val - avg_val)
     # Max difference is 9 (1-10 scale), min score is 5
     score = max(5, WEIGHT_WORK_WILLINGNESS - (diff * 5))
@@ -70,7 +68,6 @@ def calculate_work_willingness_score(user_val: int, avg_val: float) -> float:
 
 
 def get_gpa_tier(gpa: Optional[float]) -> int:
-    pass
     if gpa is None:
         return 0
     if gpa < 3.0:
@@ -81,7 +78,6 @@ def get_gpa_tier(gpa: Optional[float]) -> int:
 
 
 def calculate_gpa_score(user_gpa: Optional[float], avg_gpa: Optional[float]) -> float:
-    pass
     user_tier = get_gpa_tier(user_gpa)
     avg_tier = get_gpa_tier(avg_gpa)
 
@@ -103,7 +99,6 @@ def calculate_gpa_score(user_gpa: Optional[float], avg_gpa: Optional[float]) -> 
 
 
 def normalize_location(loc: Optional[str]) -> str:
-    pass
     if not loc:
 
         
@@ -119,7 +114,6 @@ def normalize_location(loc: Optional[str]) -> str:
 
 
 def calculate_location_score(user_loc: Optional[str], avg_loc: Optional[str]) -> float:
-    pass
     user_norm = normalize_location(user_loc)
     avg_norm = normalize_location(avg_loc)
 
@@ -144,7 +138,6 @@ def calculate_location_score(user_loc: Optional[str], avg_loc: Optional[str]) ->
 
 
 def normalize_time(time_pref: Optional[str]) -> str:
-    pass
     if not time_pref:
         return "unknown"
     time_pref = time_pref.strip().lower()
@@ -156,7 +149,6 @@ def normalize_time(time_pref: Optional[str]) -> str:
 
 
 def calculate_time_score(user_time: Optional[str], avg_time: Optional[str]) -> float:
-    pass
     user_norm = normalize_time(user_time)
     avg_norm = normalize_time(avg_time)
 
@@ -170,7 +162,6 @@ def calculate_time_score(user_time: Optional[str], avg_time: Optional[str]) -> f
 
 
 def calculate_member_averages(members: List[dict]) -> dict:
-    pass
     if not members:
         return {
             "work_willingness": 5.0,
@@ -201,7 +192,6 @@ def calculate_member_averages(members: List[dict]) -> dict:
 
 
 def calculate_total_score(user: dict, group_averages: dict) -> tuple[float, dict]:
-    pass
     work_score = calculate_work_willingness_score(
         user.get("work_willingness", 5),
         group_averages["work_willingness"]
@@ -239,7 +229,6 @@ async def create_study_group(
     supabase: Client = Depends(get_supabase_admin),
     supabase_admin: Client = Depends(get_supabase_admin),
 ) -> StudyGroupResponse:
-    pass
     group_data = {
         "course_id": request.course_id,
         "name": request.name,
@@ -279,7 +268,6 @@ async def search_study_groups_by_name(
     name: str = Query(..., min_length=1, description="Study group name to search"),
     supabase: Client = Depends(get_supabase_admin)
 ) -> List[StudyGroupResponse]:
-    pass
     result = (
         supabase.table("study_groups")
         .select("*, user_study_groups(count)")
@@ -296,7 +284,6 @@ async def get_study_groups_by_course(
     course_id: int,
     supabase: Client = Depends(get_supabase_admin)
 ) -> List[StudyGroupResponse]:
-    pass
     result = (
         supabase.table("study_groups")
         .select("*, user_study_groups(count)")
@@ -314,7 +301,6 @@ async def request_join_study_group(
     current_user: dict = Depends(get_current_user),
     supabase: Client = Depends(get_supabase_admin)
 ):
-    pass
     group = get_group_or_404(supabase, group_id)
 
     # 이미 멤버인지 확인
@@ -383,7 +369,6 @@ async def leave_study_group(
     supabase: Client = Depends(get_supabase_admin),
     supabase_admin: Client = Depends(get_supabase_admin),
 ):
-    pass
     existing = (
         supabase.table("user_study_groups")
         .select("user_id, role")
@@ -425,7 +410,6 @@ async def get_my_study_groups(
     current_user: dict = Depends(get_current_user),
     supabase: Client = Depends(get_supabase_admin)
 ) -> List[StudyGroupResponse]:
-    pass
     memberships = (
         supabase.table("user_study_groups")
         .select("study_group_id")
@@ -455,7 +439,6 @@ async def get_recommended_study_groups(
     current_user: dict = Depends(get_current_user),
     supabase: Client = Depends(get_supabase_admin)
 ) -> List[StudyGroupRecommendation]:
-    pass
     # Get user's enrolled courses
     user_courses = (
         supabase.table("user_courses")
@@ -553,7 +536,6 @@ async def get_group_members(
     current_user: dict = Depends(get_current_user),
     supabase: Client = Depends(get_supabase_admin),
 ) -> List[GroupMemberResponse]:
-    pass
     from app.services.schedule_service import assert_group_member
     assert_group_member(supabase, group_id, current_user["id"])
 
@@ -590,7 +572,6 @@ async def get_join_requests(
     current_user: dict = Depends(get_current_user),
     supabase: Client = Depends(get_supabase_admin),
 ) -> List[JoinRequestResponse]:
-    pass
     get_group_or_404(supabase, group_id)
     assert_group_admin(supabase, group_id, current_user["id"])
 
@@ -619,7 +600,6 @@ async def accept_join_request(
     supabase: Client = Depends(get_supabase_admin),
     supabase_admin: Client = Depends(get_supabase_admin),
 ):
-    pass
     get_group_or_404(supabase, group_id)
     assert_group_admin(supabase, group_id, current_user["id"])
 
@@ -693,7 +673,6 @@ async def decline_join_request(
     current_user: dict = Depends(get_current_user),
     supabase: Client = Depends(get_supabase_admin),
 ):
-    pass
     get_group_or_404(supabase, group_id)
     assert_group_admin(supabase, group_id, current_user["id"])
 
@@ -722,7 +701,6 @@ async def kick_member(
     current_user: dict = Depends(get_current_user),
     supabase: Client = Depends(get_supabase_admin),
 ):
-    pass
     get_group_or_404(supabase, group_id)
     assert_group_admin(supabase, group_id, current_user["id"])
 

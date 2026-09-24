@@ -5,7 +5,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-
+#router error handler + logging
 def handle_route_errors(func):
     @wraps(func)
     async def wrapper(*args, **kwargs):
@@ -22,8 +22,8 @@ def handle_route_errors(func):
     return wrapper
 
 
+#class code normalizer for course find and study group find
 def normalize_code(value: Optional[str]) -> Optional[str]:
-    pass
     if value is None or not value.strip():
         return None
     return value.strip().replace(" ", "").upper()

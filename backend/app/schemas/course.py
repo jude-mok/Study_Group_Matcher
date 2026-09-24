@@ -2,7 +2,6 @@ from pydantic import BaseModel, Field
 
 
 class CourseCreate(BaseModel):
-    pass
     course_code: str = Field(..., min_length=1, description="Course code (e.g., CS-UY 1134)")
     course_name: str = Field(..., min_length=1, description="Course name")
 
@@ -16,7 +15,6 @@ class CourseCreate(BaseModel):
 
 
 class CourseResponse(BaseModel):
-    pass
     id: int
     course_code: str
     course_name: str

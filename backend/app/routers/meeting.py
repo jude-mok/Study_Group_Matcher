@@ -35,7 +35,6 @@ async def create_proposal(
     current_user: dict = Depends(get_current_user),
     supabase: Client = Depends(get_supabase_admin),
 ) -> MeetingProposalResponse:
-    pass
     assert_room_admin(supabase, request.room_id, current_user["id"])
 
     if request.start_time >= request.end_time:
@@ -87,7 +86,6 @@ async def get_proposals(
     current_user: dict = Depends(get_current_user),
     supabase: Client = Depends(get_supabase_admin),
 ) -> List[MeetingProposalResponse]:
-    pass
     assert_room_member(supabase, room_id, current_user["id"])
 
     result = (
@@ -108,7 +106,6 @@ async def cast_vote(
     current_user: dict = Depends(get_current_user),
     supabase: Client = Depends(get_supabase_admin),
 ):
-    pass
     proposal = get_proposal_or_404(supabase, request.proposal_id)
 
     if proposal["is_confirmed"]:
@@ -165,7 +162,6 @@ async def get_results(
     current_user: dict = Depends(get_current_user),
     supabase: Client = Depends(get_supabase_admin),
 ) -> List[MeetingResultResponse]:
-    pass
     assert_room_member(supabase, room_id, current_user["id"])
 
     result = (

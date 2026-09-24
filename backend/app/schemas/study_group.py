@@ -4,7 +4,6 @@ from datetime import datetime
 
 
 class StudyGroupCreate(BaseModel):
-    pass
     course_id: int = Field(..., description="course id")
     name: str = Field(..., min_length=1, description="Study group name")
     max_members: int = Field(ge=2, description="Maximum number of members")
@@ -22,7 +21,6 @@ class StudyGroupCreate(BaseModel):
 
 
 class StudyGroupResponse(BaseModel):
-    pass
     id: str
     course_id: int
     name: str
@@ -37,7 +35,6 @@ class StudyGroupResponse(BaseModel):
 
 
 class GroupMemberResponse(BaseModel):
-    pass
     user_id: str
     role: str  # "admin" | "member"
     name: str
@@ -52,12 +49,10 @@ class GroupMemberResponse(BaseModel):
 
 
 class StudyGroupJoin(BaseModel):
-    pass
     role: str = Field(default="member", description="Role in the group: 'admin' or 'member'")
 
 
 class StudyGroupRecommendation(BaseModel):
-    pass
     id: str
     course_id: int
     name: str

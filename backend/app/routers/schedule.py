@@ -32,7 +32,6 @@ async def get_my_schedules(
     current_user: dict = Depends(get_current_user),
     supabase: Client = Depends(get_supabase_admin),
 ) -> List[ScheduleResponse]:
-    pass
     result = (
         supabase.table("schedule")
         .select("*")
@@ -51,7 +50,6 @@ async def get_group_schedules(
     current_user: dict = Depends(get_current_user),
     supabase: Client = Depends(get_supabase_admin),
 ) -> List[ScheduleResponse]:
-    pass
     assert_group_member(supabase, group_id, current_user["id"])
 
     result = (
@@ -71,7 +69,6 @@ async def get_schedule(
     current_user: dict = Depends(get_current_user),
     supabase: Client = Depends(get_supabase_admin),
 ) -> ScheduleResponse:
-    pass
     schedule = get_schedule_by_id(supabase, schedule_id)
 
     if schedule["group_id"]:
@@ -92,7 +89,6 @@ async def create_schedule(
     current_user: dict = Depends(get_current_user),
     supabase: Client = Depends(get_supabase_admin),
 ) -> ScheduleResponse:
-    pass
     if request.start_time >= request.end_time:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -131,7 +127,6 @@ async def update_schedule(
     current_user: dict = Depends(get_current_user),
     supabase: Client = Depends(get_supabase_admin),
 ) -> ScheduleResponse:
-    pass
     schedule = get_schedule_by_id(supabase, schedule_id)
     assert_schedule_owner(schedule, current_user["id"])
 
@@ -178,7 +173,6 @@ async def delete_schedule(
     current_user: dict = Depends(get_current_user),
     supabase: Client = Depends(get_supabase_admin),
 ) -> None:
-    pass
     schedule = get_schedule_by_id(supabase, schedule_id)
     assert_schedule_owner(schedule, current_user["id"])
 

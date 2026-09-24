@@ -59,7 +59,6 @@ async def get_auth_identity(
     credentials: HTTPAuthorizationCredentials = Depends(security),
     supabase: Client = Depends(get_supabase),
 ):
-    pass
     try:
         result = supabase.auth.get_user(credentials.credentials)
         if result and result.user:

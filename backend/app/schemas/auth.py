@@ -5,7 +5,6 @@ from app.schemas.user import UserResponse, normalize_string
 
 
 class UserCreate(BaseModel):
-    pass
     name: str = Field(..., min_length=1)
     nyu_email: EmailStr
     nyu_id: str = Field(..., min_length=1)
@@ -49,7 +48,6 @@ class UserCreate(BaseModel):
 
 
 class LoginRequest(BaseModel):
-    pass
     nyu_email: EmailStr
     password: str
 
@@ -60,7 +58,6 @@ class LoginRequest(BaseModel):
 
 
 class TokenResponse(BaseModel):
-    pass
     access_token: str
     refresh_token: str
     expires_at: int  # Unix timestamp when access_token expires
@@ -69,12 +66,10 @@ class TokenResponse(BaseModel):
 
 
 class RefreshTokenRequest(BaseModel):
-    pass
     refresh_token: str
 
 
 class PasswordResetRequest(BaseModel):
-    pass
     email: EmailStr
 
     @field_validator('email', mode='before')
@@ -84,7 +79,6 @@ class PasswordResetRequest(BaseModel):
 
 
 class PasswordResetConfirm(BaseModel):
-    pass
     new_password: str = Field(..., min_length=8)
 
 

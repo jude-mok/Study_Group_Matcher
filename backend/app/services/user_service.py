@@ -3,7 +3,6 @@ from supabase import Client
 
 
 def get_user_by_email(supabase: Client, email: str) -> dict:
-    pass
     result = (
         supabase.table("users")
         .select("*")
@@ -21,7 +20,6 @@ def get_user_by_email(supabase: Client, email: str) -> dict:
 
 
 def get_user_by_id(supabase: Client, user_id: str) -> dict:
-    pass
     result = (
         supabase.table("users")
         .select("*")
@@ -39,7 +37,6 @@ def get_user_by_id(supabase: Client, user_id: str) -> dict:
 
 
 def check_user_exists_by_email(supabase: Client, email: str) -> bool:
-    pass
     result = (
         supabase.table("users")
         .select("id")
@@ -50,7 +47,6 @@ def check_user_exists_by_email(supabase: Client, email: str) -> bool:
 
 
 def check_user_exists_by_nyu_id(supabase: Client, nyu_id: str) -> bool:
-    pass
     result = (
         supabase.table("users")
         .select("id")
@@ -61,7 +57,6 @@ def check_user_exists_by_nyu_id(supabase: Client, nyu_id: str) -> bool:
 
 
 def create_user_in_db(supabase: Client, user_data: dict) -> dict:
-    pass
     result = supabase.table("users").insert(user_data).execute()
 
     if not result.data:
@@ -74,7 +69,6 @@ def create_user_in_db(supabase: Client, user_data: dict) -> dict:
 
 
 def update_user_in_db(supabase: Client, user_id: str, update_data: dict) -> dict:
-    pass
     if not update_data:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -98,7 +92,6 @@ def update_user_in_db(supabase: Client, user_id: str, update_data: dict) -> dict
 
 
 def delete_user_from_db(supabase: Client, user_id: str) -> None:
-    pass
     result = (
         supabase.table("users")
         .delete()
@@ -114,7 +107,6 @@ def delete_user_from_db(supabase: Client, user_id: str) -> None:
 
 
 def update_user_password(supabase: Client, user_id: str, new_password: str) -> None:
-    pass
     try:
         supabase.auth.admin.update_user_by_id(user_id, {"password": new_password})
     except Exception as e:

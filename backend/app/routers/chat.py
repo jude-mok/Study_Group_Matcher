@@ -27,7 +27,6 @@ async def list_my_rooms(
     current_user: dict = Depends(get_current_user),
     supabase_admin: Client = Depends(get_supabase_admin),
 ) -> List[ChatRoomResponse]:
-    pass
     return get_user_rooms(supabase_admin, current_user["id"])
 
 
@@ -38,7 +37,6 @@ async def create_chat_room(
     current_user: dict = Depends(get_current_user),
     supabase_admin: Client = Depends(get_supabase_admin),
 ) -> ChatRoomResponse:
-    pass
     assert_group_member(supabase_admin, request.group_id, current_user["id"])
     group_result = supabase_admin.table("study_groups").select("name").eq("id", request.group_id).execute()
     group_name = group_result.data[0]["name"] if group_result.data else ""
@@ -54,7 +52,6 @@ async def get_room_messages(
     current_user: dict = Depends(get_current_user),
     supabase_admin: Client = Depends(get_supabase_admin),
 ) -> List[MessageResponse]:
-    pass
     if not check_room_membership(supabase_admin, room_id, current_user["id"]):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -69,7 +66,6 @@ async def websocket_chat(
     websocket: WebSocket,
     token: str = Query(...),
 ) -> None:
-    pass
     supabase_admin = get_supabase_admin()
 
     # 1. JWT 검증 — supabase.auth.get_user() uses algorithm-agnostic verification

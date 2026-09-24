@@ -3,13 +3,11 @@ from typing import Optional
 
 
 def normalize_string(value: str) -> str:
-    pass
     if value is None:
         return None
     return value.strip().lower()
 
 class UserBase(BaseModel):
-    pass
     name: str
     nyu_email: EmailStr
     nyu_id: str
@@ -23,7 +21,6 @@ class UserBase(BaseModel):
 
 
 class UserResponse(BaseModel):
-    pass
     id: str
     name: str
     nyu_email: str
@@ -56,7 +53,6 @@ class UserResponse(BaseModel):
 
 
 class UserUpdate(BaseModel):
-    pass
     name: Optional[str] = None
     major: Optional[str] = None
     minor: Optional[str] = None

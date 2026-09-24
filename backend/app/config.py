@@ -7,7 +7,6 @@ BASE_DIR = Path(__file__).resolve().parent.parent  # backend/
 
 
 class Settings(BaseSettings):
-    pass
 
     model_config = SettingsConfigDict(
         env_file=str(BASE_DIR / ".env"),
@@ -26,11 +25,9 @@ class Settings(BaseSettings):
 
     @property
     def cors_origins_list(self) -> list[str]:
-        pass
         return [origin.strip() for origin in self.cors_origins.split(",")]
 
 
 @lru_cache()
 def get_settings() -> Settings:
-    pass
     return Settings()

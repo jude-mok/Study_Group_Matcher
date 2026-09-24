@@ -20,7 +20,6 @@ router = APIRouter(prefix="/users", tags=["users"])
 async def get_current_user_profile(
     current_user: dict = Depends(get_current_user)
 ) -> UserResponse:
-    pass
     return current_user
 
 
@@ -31,7 +30,6 @@ async def get_user_profile(
     current_user: dict = Depends(get_current_user),
     supabase: Client = Depends(get_supabase_admin)
 ) -> UserResponse:
-    pass
     return get_user_by_id(supabase, user_id)
 
 
@@ -42,7 +40,6 @@ async def update_current_user_profile(
     current_user: dict = Depends(get_current_user),
     supabase: Client = Depends(get_supabase_admin)
 ) -> UserResponse:
-    pass
     update_data = user_update.model_dump(exclude_none=True)
 
     if not update_data:
@@ -70,7 +67,6 @@ async def delete_current_user(
     current_user: dict = Depends(get_current_user),
     supabase: Client = Depends(get_supabase_admin)
 ):
-    pass
     user_id = current_user["id"]
 
     # Delete all FK-referenced data before deleting the user

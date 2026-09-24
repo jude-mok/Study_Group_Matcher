@@ -16,7 +16,6 @@ router = APIRouter(prefix="/courses", tags=["courses"])
 async def get_all_courses(
     supabase: Client = Depends(get_supabase_admin)
 ) -> List[CourseResponse]:
-    pass
     result = supabase.table("courses").select("*").execute()
     return result.data or []
 
@@ -27,7 +26,6 @@ async def search_courses(
     course_code: str = Query(..., min_length=1, description="Course code to search"),
     supabase: Client = Depends(get_supabase_admin)
 ) -> List[CourseResponse]:
-    pass
     normalized = normalize_code(course_code)
     if not normalized:
         raise HTTPException(
@@ -50,7 +48,6 @@ async def get_course_by_id(
     course_id: int,
     supabase: Client = Depends(get_supabase_admin)
 ) -> CourseResponse:
-    pass
     result = (
         supabase.table("courses")
         .select("*")
@@ -74,7 +71,6 @@ async def create_course(
     current_user: dict = Depends(get_current_user),
     supabase: Client = Depends(get_supabase_admin)
 ) -> CourseResponse:
-    pass
     normalized_code = normalize_code(request.course_code)
     normalized_name = normalize_code(request.course_name)
 
