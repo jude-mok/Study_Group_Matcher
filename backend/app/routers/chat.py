@@ -68,20 +68,16 @@ async def websocket_chat(
 ) -> None:
     supabase_admin = get_supabase_admin()
 
-    # 1. JWT 검증 — supabase.auth.get_user() uses algorithm-agnostic verification
-    try:
-        user_response = supabase_admin.auth.get_user(token)
-        user_id: str = user_response.user.id
-    except Exception:
-        await websocket.close(code=4001)
+    # JWT Autheication check
+    user_id = _authenciation_check(token, websocket)
+    if user_id == None:
         return
 
-    # 2. 채팅방 멤버 권한 확인
+    # Role check
     if not check_room_membership(supabase_admin, room_id, user_id):
         await websocket.close(code=4003)
         return
-
-    # 3. 연결 등록
+    #conneting to chat
     await manager.connect(room_id, websocket, user_id)
 
     try:
@@ -113,3 +109,13 @@ async def websocket_chat(
 
     finally:
         manager.disconnect(room_id, websocket)
+
+async def _authenciation_check(token: str, websocket: WebSocket):
+    try:
+        supabase_admin = get_supabase_admin()
+        user_response = supabase_admin.auth.get_user(token)
+        user_id: str = user_response.user.id
+        return user_id
+    except Exception:
+        await websocket.close(code=4001)
+        return
