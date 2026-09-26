@@ -1,11 +1,13 @@
+import logging
+
 from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.security import HTTPAuthorizationCredentials
 from supabase import Client
 from supabase_auth.errors import AuthApiError
 
 from app.config import get_settings
 from app.database import get_supabase, get_supabase_admin
-from app.dependencies import get_current_user, get_auth_identity, security
-from fastapi.security import HTTPAuthorizationCredentials
+from app.dependencies import get_auth_identity, get_current_user, security
 from app.schemas.user import UserResponse
 from app.schemas.auth import (
     UserCreate,
@@ -23,7 +25,6 @@ from app.services.user_service import (
     create_user_in_db
 )
 from app.services.utils import handle_route_errors
-import logging
 
 
 logger = logging.getLogger(__name__)
@@ -39,19 +40,7 @@ async def signup(
     _ensure_user_not_exist(user, supabase_admin)
     auth_response = _create_user_credential(user, supabase_admin)
 
-    user_data = {
-        "id": auth_response.user.id,
-        "nyu_email": user.nyu_email,
-        "nyu_id": user.nyu_id,
-        "name": user.name,
-        "major": user.major,
-        "minor": user.minor,
-        "academic_standing": user.academic_standing,
-        "work_willingness": user.work_willingness,
-        "preferred_location": user.preferred_location,
-        "time_preference": user.time_preference,
-        "avg_gpa": user.avg_gpa
-    }
+    user_data = _build_user_profile(user, auth_response.user.id)
 
     try:
         return create_user_in_db(supabase_admin, user_data)
@@ -60,47 +49,6 @@ async def signup(
         if isinstance(e, HTTPException):
             logger.error("signup.profile_save_failed status=%s", e.status_code)
         raise
-
-
-def _ensure_user_not_exist(user: UserCreate, supabase_admin : Client):
-    if check_user_exists_by_email(supabase_admin, user.nyu_email):
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="User with this email exists"
-        )
-
-    if check_user_exists_by_nyu_id(supabase_admin, user.nyu_id):
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="User with this NYU id exists"
-        )
-
-def _create_user_credential(user: UserCreate, supabase_admin : Client):
-    auth_response = supabase_admin.auth.admin.create_user({
-        "email": user.nyu_email,
-        "password": user.password,
-        "email_confirm": True,
-        "user_metadata": {
-            "name": user.name
-        }
-    })
-
-    if not auth_response.user:
-        logger.error("signup.auth_response_missing_user")
-        raise HTTPException(
-            status_code=status.HTTP_502_BAD_GATEWAY,
-            detail="Unable to complete signup. Please try again."
-        )
-
-    return auth_response
-
-def _rollback_auth_user(supabase_admin: Client, user_id: str) -> None:
-    try:
-        supabase_admin.auth.admin.delete_user(user_id)
-    except Exception as e:
-        logger.error(
-            "signup.rollback_failed error_type=%s", type(e).__name__,
-        )
 
 
 @router.post("/login", response_model=TokenResponse)
@@ -116,12 +64,13 @@ async def login(
             "password": credentials.password
         })
     except AuthApiError as e:
-        if e.code != "invalid_credentials":
-            raise  # leading unexpected error to hanlder.
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect email or password"
-        ) from e
+        if e.code == "invalid_credentials":
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Incorrect email or password",
+            ) from e
+        # Let the shared handler log unexpected failures.
+        raise
 
     if not auth_response.session:
         logger.error("login.auth_response_missing_session")
@@ -139,7 +88,6 @@ async def login(
         "token_type": "bearer",
         "user": user_data
     }
-
 
 
 @router.post("/logout", status_code=status.HTTP_200_OK)
@@ -188,7 +136,7 @@ async def request_password_reset(
     redirect = get_settings().password_reset_redirect_url
     options = {"redirect_to": redirect} if redirect else {}
     supabase.auth.reset_password_email(reset_request.email, options)
-    # Always return success to prevent email enumeration
+    # Use the same response whether or not the email belongs to an account.
     return {"message": "If the email exists, a reset link has been sent"}
 
 
@@ -196,7 +144,7 @@ async def request_password_reset(
 @handle_route_errors
 async def confirm_password_reset(
     reset_confirm: PasswordResetConfirm,
-    identity = Depends(get_auth_identity),
+    identity=Depends(get_auth_identity),
     supabase: Client = Depends(get_supabase_admin)
 ):
     supabase.auth.admin.update_user_by_id(identity.id, {"password": reset_confirm.new_password})
@@ -206,9 +154,70 @@ async def confirm_password_reset(
 @router.get("/verify-email-status", status_code=status.HTTP_200_OK)
 @handle_route_errors
 async def check_email_verification(
-    identity = Depends(get_auth_identity),
+    identity=Depends(get_auth_identity),
 ):
     return {
         "email_verified": identity.email_confirmed_at is not None,
         "email": identity.email
     }
+
+
+def _build_user_profile(user: UserCreate, user_id: str) -> dict:
+    """Select profile fields explicitly so credentials never enter the users table."""
+    return {
+        "id": user_id,
+        "nyu_email": user.nyu_email,
+        "nyu_id": user.nyu_id,
+        "name": user.name,
+        "major": user.major,
+        "minor": user.minor,
+        "academic_standing": user.academic_standing,
+        "work_willingness": user.work_willingness,
+        "preferred_location": user.preferred_location,
+        "time_preference": user.time_preference,
+        "avg_gpa": user.avg_gpa
+    }
+
+
+def _ensure_user_not_exist(user: UserCreate, supabase_admin: Client) -> None:
+    if check_user_exists_by_email(supabase_admin, user.nyu_email):
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="User with this email exists"
+        )
+
+    if check_user_exists_by_nyu_id(supabase_admin, user.nyu_id):
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="User with this NYU id exists"
+        )
+
+
+def _create_user_credential(user: UserCreate, supabase_admin: Client):
+    auth_response = supabase_admin.auth.admin.create_user({
+        "email": user.nyu_email,
+        "password": user.password,
+        "email_confirm": True,
+        "user_metadata": {
+            "name": user.name
+        }
+    })
+
+    if not auth_response.user:
+        logger.error("signup.auth_response_missing_user")
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail="Unable to complete signup. Please try again."
+        )
+
+    return auth_response
+
+
+def _rollback_auth_user(supabase_admin: Client, user_id: str) -> None:
+    """Attempt cleanup without replacing the original profile-save error."""
+    try:
+        supabase_admin.auth.admin.delete_user(user_id)
+    except Exception as e:
+        logger.error(
+            "signup.rollback_failed error_type=%s", type(e).__name__,
+        )
