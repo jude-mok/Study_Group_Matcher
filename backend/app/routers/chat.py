@@ -68,15 +68,11 @@ async def websocket_chat(
 ) -> None:
     supabase_admin = get_supabase_admin()
 
-    # JWT Autheication check
-    user_id = _authenciation_check(token, websocket)
+    # JWT Autheication and Role check
+    user_id = await _authenticate_room_member(token, websocket, room_id)
     if user_id == None:
         return
 
-    # Role check
-    if not check_room_membership(supabase_admin, room_id, user_id):
-        await websocket.close(code=4003)
-        return
     #conneting to chat
     await manager.connect(room_id, websocket, user_id)
 
@@ -110,12 +106,22 @@ async def websocket_chat(
     finally:
         manager.disconnect(room_id, websocket)
 
-async def _authenciation_check(token: str, websocket: WebSocket):
+async def _authenticate_room_member(
+    token: str, 
+    websocket: WebSocket, 
+    room_id: str) -> str | None:
+    #Authentication
     try:
         supabase_admin = get_supabase_admin()
         user_response = supabase_admin.auth.get_user(token)
-        user_id: str = user_response.user.id
-        return user_id
+        user_id = user_response.user.id
+
     except Exception:
         await websocket.close(code=4001)
-        return
+        return None
+    #Role Check
+    if not check_room_membership(supabase_admin, room_id, user_id):
+        await websocket.close(code=4003)
+        return None
+
+    return user_id
