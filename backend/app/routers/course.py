@@ -80,19 +80,7 @@ async def create_course(
             detail="Course code and name are required"
         )
 
-    # Check for duplicate course
-    existing = (
-        supabase.table("courses")
-        .select("id")
-        .eq("course_code", normalized_code)
-        .execute()
-    )
-
-    if existing.data:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="A course with this code already exists"
-        )
+    _duplicated_course_check(normalized_code, supabase)
 
     course_data = {
         "course_code": normalized_code,
@@ -108,3 +96,17 @@ async def create_course(
         )
 
     return result.data[0]
+
+def _duplicated_course_check(normalized_code: str, supabase: Client) -> None:
+    existing = (
+        supabase.table("courses")
+        .select("id")
+        .eq("course_code", normalized_code)
+        .execute()
+    )
+
+    if existing.data:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="A course with this code already exists"
+        )

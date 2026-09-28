@@ -16,10 +16,11 @@ from app.services.chat_service import (
 from app.services.schedule_service import assert_group_member
 from app.services.utils import handle_route_errors
 from app.ws.connection_manager import ConnectionManager
+import logging
 
 router = APIRouter(tags=["chat"])
 manager = ConnectionManager()
-
+logger = logging.getLogger(__name__)
 
 @router.get("/rooms", response_model=List[ChatRoomResponse])
 @handle_route_errors
@@ -99,10 +100,9 @@ async def websocket_chat(
             })
 
     except WebSocketDisconnect:
-        manager.disconnect(room_id, websocket)
+        pass
     except Exception:
-        manager.disconnect(room_id, websocket)
-
+        logger.exception("Failed to process chat")
     finally:
         manager.disconnect(room_id, websocket)
 
