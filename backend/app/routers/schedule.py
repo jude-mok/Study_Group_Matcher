@@ -18,12 +18,18 @@ from app.services.utils import handle_route_errors
 router = APIRouter(prefix="/schedules", tags=["schedules"])
 
 
-def _as_datetime(value):
-    if isinstance(value, datetime):
-        return value
+def _as_datetime(value: datetime | str) -> datetime:
     if isinstance(value, str):
         return datetime.fromisoformat(value.replace("Z", "+00:00"))
     return value
+
+
+def _validate_time_range(start_time: datetime, end_time: datetime) -> None:
+    if start_time >= end_time:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="end_time must be after start_time",
+        )
 
 
 @router.get("/me", response_model=List[ScheduleResponse])
@@ -89,24 +95,13 @@ async def create_schedule(
     current_user: dict = Depends(get_current_user),
     supabase: Client = Depends(get_supabase_admin),
 ) -> ScheduleResponse:
-    if request.start_time >= request.end_time:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="end_time must be after start_time",
-        )
+    _validate_time_range(request.start_time, request.end_time)
 
     if request.group_id:
         assert_group_member(supabase, request.group_id, current_user["id"])
 
-    data = {
-        "title": request.title,
-        "description": request.description,
-        "start_time": request.start_time.isoformat(),
-        "end_time": request.end_time.isoformat(),
-        "location": request.location,
-        "group_id": request.group_id,
-        "created_by": current_user["id"],
-    }
+    data = request.model_dump(mode="json")
+    data["created_by"] = current_user["id"]
 
     result = supabase.table("schedule").insert(data).execute()
 
@@ -130,25 +125,16 @@ async def update_schedule(
     schedule = get_schedule_by_id(supabase, schedule_id)
     assert_schedule_owner(schedule, current_user["id"])
 
-    update_data = request.model_dump(exclude_none=True)
+    update_data = request.model_dump(mode="json", exclude_none=True)
     if not update_data:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="No fields to update",
         )
 
-    start = _as_datetime(update_data.get("start_time", schedule["start_time"]))
-    end = _as_datetime(update_data.get("end_time", schedule["end_time"]))
-    if start >= end:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="end_time must be after start_time",
-        )
-
-    # datetime → isoformat 변환
-    for field in ("start_time", "end_time"):
-        if field in update_data and hasattr(update_data[field], "isoformat"):
-            update_data[field] = update_data[field].isoformat()
+    start_time = request.start_time or _as_datetime(schedule["start_time"])
+    end_time = request.end_time or _as_datetime(schedule["end_time"])
+    _validate_time_range(start_time, end_time)
 
     result = (
         supabase.table("schedule")
