@@ -216,6 +216,33 @@ class APIIntegration(unittest.TestCase):
         self.req('POST','/meetings/votes',self.b,{'proposal_id':p['id'],'vote':True},400)
         self.assertEqual(len(self.db.rows['schedule']),1)
 
+    def test_departed_member_vote_is_excluded_from_summary_and_confirmation(self):
+        g, r = self.room()
+        p = self.proposal(r)
+        self.req('POST', '/meetings/votes', self.b, {'proposal_id': p['id'], 'vote': True})
+        self.req('DELETE', '/study-groups/' + g['id'] + '/leave', self.b, status=204)
+        proposals = self.req('GET', '/meetings/proposals/' + r['id'], self.a)
+        self.assertEqual(proposals[0]['total_members'], 1)
+        self.assertEqual(proposals[0]['attend_count'], 0)
+        self.assertEqual(proposals[0]['votes'], [])
+        self.req('POST', '/meetings/votes', self.a, {'proposal_id': p['id'], 'vote': True})
+        self.assertEqual(len(self.req('GET', '/meetings/results/' + r['id'], self.a)), 1)
+
+    def test_expiry_ignores_departed_member_votes(self):
+        import asyncio
+        g, r = self.room()
+        self.req('POST', '/study-groups/' + g['id'] + '/join', self.c, status=201)
+        p, q = self.proposal(r), self.proposal(r)
+        for member in (self.b, self.c):
+            self.req('POST', '/meetings/votes', member, {'proposal_id': p['id'], 'vote': True})
+        self.req('POST', '/meetings/votes', self.a, {'proposal_id': q['id'], 'vote': True})
+        for member in (self.b, self.c):
+            self.req('DELETE', '/study-groups/' + g['id'] + '/leave', member, status=204)
+        for row in self.db.rows['meeting_proposals']:
+            row['expires_at'] = '2000-01-01T00:00:00+00:00'
+        asyncio.run(meeting_expiry.check_expired_proposals())
+        self.assertEqual(self.db.rows['meeting_results'][0]['proposal_id'], q['id'])
+
     def test_proposal_admin_limit_and_expired_vote(self):
         g,r=self.room()
         self.req('POST','/meetings/proposals',self.b,{'room_id':r['id'],**self.times()},403)

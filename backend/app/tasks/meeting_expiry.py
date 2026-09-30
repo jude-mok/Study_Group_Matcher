@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 from app.database import get_supabase_admin
-from app.services.meeting_service import confirm_proposal, get_room_or_404
+from app.services.meeting_service import confirm_proposal, get_room_or_404, get_vote_summary
 
 logger = logging.getLogger(__name__)
 scheduler = AsyncIOScheduler()
@@ -42,14 +42,8 @@ async def check_expired_proposals() -> None:
         best_proposal = None
         best_count = -1
         for proposal in proposals:
-            votes_result = (
-                supabase.table("meeting_votes")
-                .select("vote")
-                .eq("proposal_id", proposal["id"])
-                .eq("vote", True)
-                .execute()
-            )
-            attend_count = len(votes_result.data or [])
+            summary = get_vote_summary(supabase, proposal["id"], room_id)
+            attend_count = summary["attend_count"]
             if attend_count > best_count:
                 best_count = attend_count
                 best_proposal = proposal

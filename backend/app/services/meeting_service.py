@@ -77,10 +77,11 @@ def get_vote_summary(supabase: Client, proposal_id: str, room_id: str) -> dict:
         .eq("room_id", room_id)
         .execute()
     )
-    votes = votes_result.data or []
+    member_ids = {member["user_id"] for member in (members_result.data or [])}
+    votes = [vote for vote in (votes_result.data or []) if vote["user_id"] in member_ids]
     return {
         "attend_count": sum(1 for v in votes if v["vote"]),
-        "total_members": members_result.count or 0,
+        "total_members": len(member_ids),
         "votes": votes,
     }
 
