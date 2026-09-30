@@ -2,6 +2,7 @@ from datetime import datetime, timedelta, timezone
 from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException, status
+from postgrest import APIResponse
 from supabase import Client
 
 from app.database import get_supabase_admin
@@ -37,27 +38,10 @@ async def create_proposal(
 ) -> MeetingProposalResponse:
     assert_room_admin(supabase, request.room_id, current_user["id"])
 
-    if request.start_time >= request.end_time:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="end_time must be after start_time",
-        )
-
     now = datetime.now(timezone.utc)
 
-    active = (
-        supabase.table("meeting_proposals")
-        .select("id", count="exact")
-        .eq("room_id", request.room_id)
-        .eq("is_confirmed", False)
-        .gt("expires_at", now.isoformat())
-        .execute()
-    )
-    if (active.count or 0) >= 3:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Maximum 3 active proposals per room",
-        )
+    #pre checking proposal regulattions.
+    _pre_check_proposal(supabase, request, now)
 
     expires_at = now + timedelta(hours=12)
 
@@ -78,6 +62,26 @@ async def create_proposal(
 
     return enrich_proposal(supabase, result.data[0])
 
+def _pre_check_proposal(supabase: Client, request: MeetingProposalCreate, now: datetime):
+    if request.start_time >= request.end_time:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="end_time must be after start_time",
+        )
+    
+    active = (
+        supabase.table("meeting_proposals")
+        .select("id", count="exact")
+        .eq("room_id", request.room_id)
+        .eq("is_confirmed", False)
+        .gt("expires_at", now.isoformat())
+        .execute()
+    )
+    if (active.count or 0) >= 3:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Maximum 3 active proposals per room",
+        )
 
 @router.get("/proposals/{room_id}", response_model=List[MeetingProposalResponse])
 @handle_route_errors
