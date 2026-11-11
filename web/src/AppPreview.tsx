@@ -24,7 +24,7 @@ export default function AppPreview({ back }: { back: () => void }) {
             <br />A familiar view.
           </h1>
           <p>
-            Explore the original Study Matcher app. Find a group, open a chat,
+            Explore the original LearnLink app. Find a group, open a chat,
             and make plans together.
           </p>
           <button className="button primary" onClick={back}>
@@ -33,7 +33,7 @@ export default function AppPreview({ back }: { back: () => void }) {
         </div>
         <div className="preview-device">
           <iframe
-            title="Original Study Matcher app — interactive demo"
+            title="Original LearnLink app — interactive demo"
             src="/app-version/index.html"
           />
         </div>

@@ -113,7 +113,7 @@ class _LoginScreenState extends State<LoginScreen> {
           const SizedBox(height: 16),
           // App Name
           const Text(
-            'Study Group Matcher',
+            'LearnLink',
             style: TextStyle(
               fontSize: 28,
               fontWeight: FontWeight.bold,

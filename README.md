@@ -1,4 +1,4 @@
-# Study_Group_Matcher
+# LearnLink
 Group project with Jude,JJ,HyunJun
 
 ## Web version

@@ -1,6 +1,6 @@
-# Study Matcher web
+# LearnLink web
 
-React + TypeScript web client for the existing Study Group Matcher team project.
+React + TypeScript web client for the existing LearnLink team project.
 The original Flutter client stays in `../frontend`; the existing API stays in
 `../backend`. This is a continuation of the team repository, not a new project.
 

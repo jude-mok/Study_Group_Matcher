@@ -1,4 +1,4 @@
-# Study Matcher backend
+# LearnLink backend
 
 FastAPI API backed by Supabase. Run commands from the repository root.
 

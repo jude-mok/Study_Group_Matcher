@@ -271,7 +271,7 @@ function Workspace({
         <button
           className="brand-button"
           onClick={() => go("overview")}
-          aria-label="Study Matcher home"
+          aria-label="LearnLink home"
         >
           <Logo />
         </button>
@@ -944,7 +944,7 @@ function Workspace({
         </main>
         <footer className="workspace-footer">
           <span>Built for the way we learn together.</span>
-          <span>Study Matcher · Student project</span>
+          <span>LearnLink · Student project</span>
         </footer>
       </div>
       {modal && (

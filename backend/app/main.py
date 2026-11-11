@@ -22,7 +22,7 @@ async def meeting_scheduler(app: FastAPI):
 
 
 app = FastAPI(
-    title="Study Group Matcher API",
+    title="LearnLink API",
     description="API for matching NYU students with similar courses and work willingness",
     version="2.0.0",
     lifespan=meeting_scheduler,
@@ -59,7 +59,7 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
 
 @app.get("/")
 def root():
-    return {"message": "Welcome to Study Group Matcher API"}
+    return {"message": "Welcome to LearnLink API"}
 
 
 @app.get("/health")

@@ -1,6 +1,6 @@
 {
-    "name": "study_group_matcher",
-    "short_name": "study_group_matcher",
+    "name": "LearnLink",
+    "short_name": "LearnLink",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

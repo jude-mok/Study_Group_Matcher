@@ -1,4 +1,4 @@
-# study_group_matcher
+# LearnLink
 
 A new Flutter project.
 

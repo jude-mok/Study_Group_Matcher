@@ -7,7 +7,7 @@ export function Logo() {
       <span className="brand-mark">
         <BookOpen size={21} />
       </span>
-      study<span className="brand-light">matcher</span>
+      Learn<span className="brand-light">Link</span>
       <span className="brand-dot">.</span>
     </span>
   );
